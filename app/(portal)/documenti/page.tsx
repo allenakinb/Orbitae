@@ -46,10 +46,8 @@ function DocumentRow({
   const Icon = KIND_ICON[resource.fileKind];
   const downloadable = resource.fileUrl !== "#";
   return (
-    <div className="flex items-center gap-4 px-5 py-4">
-      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[var(--radius)] bg-accent-soft text-accent">
-        <Icon size={19} />
-      </span>
+    <div className="group flex items-center gap-4 rounded-[var(--radius)] px-2 py-4 transition-colors hover:bg-surface/70">
+      <Icon size={18} className="shrink-0 text-ink-faint" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-ink">
           {resource.name}
@@ -64,7 +62,7 @@ function DocumentRow({
         href={resource.fileUrl}
         download={downloadable ? resource.name : undefined}
         aria-label={`Scarica ${resource.name}`}
-        className="inline-flex items-center gap-1.5 rounded-[var(--radius)] border border-border px-3 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:border-accent hover:text-accent"
+        className="inline-flex items-center gap-1.5 px-1 text-sm font-medium text-ink-muted transition-colors hover:text-accent"
       >
         <Download size={15} />
         <span className="hidden sm:inline">Scarica</span>
@@ -205,11 +203,11 @@ export default function DocumentiPage() {
                 <span className="text-sm text-ink-faint">{items.length}</span>
               </div>
               {items.length === 0 ? (
-                <p className="rounded-[var(--radius-lg)] border border-dashed border-border bg-surface/50 px-5 py-6 text-sm text-ink-muted">
+                <p className="border-y border-dashed border-border py-6 text-sm text-ink-muted">
                   Nessun documento in questa categoria.
                 </p>
               ) : (
-                <div className="divide-y divide-border overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface">
+                <div className="divide-y divide-border border-y border-border">
                   {items.map((r) => (
                     <DocumentRow
                       key={r.id}

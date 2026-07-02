@@ -6,7 +6,7 @@ import { useProfiles } from "@/lib/data/hooks";
 import type { MemberStatus } from "@/lib/data/types";
 import { PageContainer } from "@/components/shell/PageContainer";
 import { SectionTitle } from "@/components/ui/Card";
-import { MemberCard } from "@/components/content/MemberCard";
+import { MemberRow } from "@/components/content/MemberCard";
 import { Input, Select } from "@/components/ui/Field";
 import { cn } from "@/lib/cn";
 
@@ -92,7 +92,7 @@ export default function MembriPage() {
             className={cn(
               "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
               status === f.value
-                ? "border-transparent bg-accent text-accent-ink"
+                ? "border-accent/40 bg-accent-soft text-accent"
                 : "border-border text-ink-muted hover:border-border-strong hover:text-ink",
             )}
           >
@@ -114,9 +114,9 @@ export default function MembriPage() {
           </p>
         </div>
       ) : (
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-4 divide-y divide-border border-y border-border">
           {results.map((m) => (
-            <MemberCard key={m.id} member={m} />
+            <MemberRow key={m.id} member={m} />
           ))}
         </div>
       )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import Link from "next/link";
 import { ShieldAlert, UserPlus, X } from "lucide-react";
 import { useProfiles } from "@/lib/data/hooks";
@@ -73,22 +73,26 @@ export default function AdminPage() {
         )}
       </SectionTitle>
 
-      {/* Summary */}
-      <div className="mt-6 grid grid-cols-3 gap-3">
+      {/* Summary — quiet inline numbers, not a card row */}
+      <div className="mt-6 flex flex-wrap items-baseline gap-x-3 gap-y-2 border-y border-border py-3.5 text-sm text-ink-muted">
         {[
-          { label: "Membri totali", value: counts.total },
-          { label: "Attivi", value: counts.active },
-          { label: "In attesa", value: counts.pending },
-        ].map((s) => (
-          <div
-            key={s.label}
-            className="rounded-[var(--radius-lg)] border border-border bg-surface p-4 transition-colors duration-200 hover:border-border-strong"
-          >
-            <div className="font-display text-2xl tabular-nums text-ink">
-              {s.value}
-            </div>
-            <div className="mt-1 text-xs text-ink-muted">{s.label}</div>
-          </div>
+          { label: "membri totali", value: counts.total },
+          { label: "attivi", value: counts.active },
+          { label: "in attesa", value: counts.pending },
+        ].map((s, i) => (
+          <Fragment key={s.label}>
+            {i > 0 && (
+              <span aria-hidden className="text-ink-faint">
+                ·
+              </span>
+            )}
+            <span className="inline-flex items-baseline gap-1.5">
+              <span className="font-display text-lg tabular-nums text-ink">
+                {s.value}
+              </span>
+              {s.label}
+            </span>
+          </Fragment>
         ))}
       </div>
 

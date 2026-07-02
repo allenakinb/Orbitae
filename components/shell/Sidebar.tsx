@@ -39,7 +39,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <Logo markSize={32} />
       </Link>
 
-      <nav className="flex flex-1 flex-col gap-0.5">
+      <nav className="flex flex-1 flex-col gap-1">
         {items.map((item) => {
           const active = isActive(pathname, item.href);
           const Icon = item.icon;
@@ -48,7 +48,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             return (
               <span
                 key={item.href}
-                className="flex cursor-not-allowed items-center gap-3 rounded-[var(--radius)] px-2 py-1.5 text-sm font-medium text-ink-faint"
+                className="flex cursor-not-allowed items-center gap-3 rounded-[var(--radius)] px-2 py-2.5 text-sm font-medium text-ink-faint"
                 aria-disabled
               >
                 <span className={cn(ICON_BOX, "text-ink-faint")}>
@@ -69,7 +69,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               onClick={onNavigate}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "group flex items-center gap-3 rounded-[var(--radius)] px-2 py-1.5 text-sm transition-colors duration-150",
+                "group flex items-center gap-3 rounded-[var(--radius)] px-2 py-2.5 text-sm transition-colors duration-150",
                 active
                   ? "font-semibold text-ink"
                   : "font-medium text-ink-muted hover:bg-surface-2/60 hover:text-ink",
@@ -79,7 +79,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                 className={cn(
                   ICON_BOX,
                   active
-                    ? "bg-accent-soft text-accent"
+                    ? "bg-accent-soft text-accent shadow-[0_0_16px_-3px_var(--color-accent-glow)]"
                     : "text-ink-faint group-hover:text-ink",
                 )}
               >
@@ -112,7 +112,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             onNavigate?.();
             logout();
           }}
-          className="mt-0.5 flex w-full items-center gap-3 rounded-[var(--radius)] px-2 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-2/60 hover:text-ink"
+          className="mt-1 flex w-full items-center gap-3 rounded-[var(--radius)] px-2 py-2.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-2/60 hover:text-ink"
         >
           <span className={cn(ICON_BOX, "text-ink-faint")}>
             <LogOut size={17} />

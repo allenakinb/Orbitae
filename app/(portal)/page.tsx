@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, CalendarDays, FileText, Megaphone, Users } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import {
   useAnnouncements,
@@ -12,7 +12,6 @@ import {
 } from "@/lib/data/hooks";
 import { PageContainer } from "@/components/shell/PageContainer";
 import { OrbitSystem } from "@/components/orbit/OrbitSystem";
-import { Stat } from "@/components/ui/Stat";
 import { AnnouncementCard } from "@/components/content/AnnouncementCard";
 import { formatDayMonth } from "@/lib/format";
 
@@ -110,12 +109,34 @@ export default function HomePage() {
         </section>
       </div>
 
-      {/* Quick stats — each links to its section */}
-      <section className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat icon={Users} value={activeCount} label="Membri attivi" href="/membri" />
-        <Stat icon={CalendarDays} value={events.length} label="Prossimi eventi" href="#eventi" />
-        <Stat icon={Megaphone} value={announcements.length} label="Annunci" href="/bacheca" />
-        <Stat icon={FileText} value={resources.length} label="Documenti" href="/documenti" />
+      {/* Quick numbers — a quiet editorial strip, not a card row */}
+      <section
+        aria-label="I numeri del club"
+        className="mt-10 flex flex-wrap items-baseline justify-center gap-x-3 gap-y-2 border-y border-border py-4"
+      >
+        {[
+          { value: activeCount, label: "membri attivi", href: "/membri" },
+          { value: events.length, label: "prossimi eventi", href: "#eventi" },
+          { value: announcements.length, label: "annunci", href: "/bacheca" },
+          { value: resources.length, label: "documenti", href: "/documenti" },
+        ].map((s, i) => (
+          <Fragment key={s.label}>
+            {i > 0 && (
+              <span aria-hidden className="text-ink-faint">
+                ·
+              </span>
+            )}
+            <Link
+              href={s.href}
+              className="group inline-flex items-baseline gap-1.5 px-1.5 text-sm text-ink-muted transition-colors hover:text-ink"
+            >
+              <span className="font-display text-lg tabular-nums text-ink transition-colors group-hover:text-accent">
+                {s.value}
+              </span>
+              {s.label}
+            </Link>
+          </Fragment>
+        ))}
       </section>
 
       {/* Upcoming events */}

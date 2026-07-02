@@ -67,23 +67,52 @@ export function OrbitSystem({ members }: { members: Profile[] }) {
         setHovered(null);
       }}
     >
-      {/* Faint orbit guide rings */}
-      {groups.map((g, i) => (
-        <div
-          key={`guide-${i}`}
-          aria-hidden
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border/60"
-          style={{
-            width: `${g.ring.radius * 100}%`,
-            height: `${g.ring.radius * 100}%`,
-          }}
+      {/* Dotted orbit guides — echo the mark's dot-burst. Each ring drifts
+          slowly (motion-safe); dots fade with distance from the core. */}
+      <svg
+        aria-hidden
+        viewBox="0 0 100 100"
+        fill="none"
+        className="pointer-events-none absolute inset-0 h-full w-full"
+      >
+        {/* Faint accent halo just outside the luminous core */}
+        <circle
+          cx="50"
+          cy="50"
+          r="16"
+          stroke="var(--color-accent)"
+          strokeOpacity="0.14"
+          strokeWidth="0.25"
+          strokeDasharray="0.06 1.4"
+          strokeLinecap="round"
+          className="origin-center motion-safe:animate-[mark-drift_180s_linear_infinite]"
         />
-      ))}
+        {groups.map((g, i) => (
+          <circle
+            key={`guide-${i}`}
+            cx="50"
+            cy="50"
+            r={g.ring.radius * 50}
+            stroke="var(--color-border-strong)"
+            strokeOpacity={0.5 - i * 0.12}
+            strokeWidth="0.25"
+            strokeDasharray="0.06 1.8"
+            strokeLinecap="round"
+            className="origin-center motion-safe:animate-[orbit-spin_var(--guide-dur)_linear_infinite]"
+            style={
+              {
+                "--guide-dur": `${220 + i * 90}s`,
+                animationDirection: i % 2 ? "reverse" : "normal",
+              } as React.CSSProperties
+            }
+          />
+        ))}
+      </svg>
 
       {/* Luminous core — the mark reads as a lit body at the centre */}
       <div
         aria-hidden
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full motion-safe:animate-[orbit-pulse_6s_ease-in-out_infinite]"
+        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full motion-safe:animate-[orbit-pulse_6s_ease-in-out_infinite]"
         style={{
           width: "clamp(220px, 46vw, 340px)",
           height: "clamp(220px, 46vw, 340px)",
@@ -94,7 +123,7 @@ export function OrbitSystem({ members }: { members: Profile[] }) {
       />
 
       {/* Central mark */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
         <OrbitMark
           size={150}
           density={1.15}
@@ -107,7 +136,10 @@ export function OrbitSystem({ members }: { members: Profile[] }) {
       {groups.map((g, gi) => (
         <div
           key={`ring-${gi}`}
-          className="absolute inset-0 motion-safe:[animation:orbit-spin_var(--dur)_linear_infinite]"
+          // pointer-events-none: the stacked full-size ring containers would
+          // otherwise swallow clicks meant for avatars on the rings below.
+          // The avatar buttons re-enable their own pointer events.
+          className="pointer-events-none absolute inset-0 motion-safe:[animation:orbit-spin_var(--dur)_linear_infinite]"
           style={
             {
               "--dur": `${g.ring.duration}s`,
@@ -157,7 +189,7 @@ export function OrbitSystem({ members }: { members: Profile[] }) {
                     onBlur={() => setHovered(null)}
                     onClick={() => router.push(`/membri/${member.id}`)}
                     aria-label={`${member.name} — ${ROLE_LABEL[member.role]}`}
-                    className="group relative block cursor-pointer rounded-full transition-transform duration-300 ease-[var(--ease-out-expo)] hover:scale-[1.16] focus-visible:scale-[1.16]"
+                    className="group pointer-events-auto relative block cursor-pointer rounded-full transition-transform duration-300 ease-[var(--ease-out-expo)] hover:scale-[1.16] focus-visible:scale-[1.16]"
                   >
                     <Avatar
                       profile={member}

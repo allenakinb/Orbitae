@@ -1,37 +1,39 @@
 import Link from "next/link";
-import { MapPin, Briefcase } from "lucide-react";
 import type { Profile } from "@/lib/data/types";
 import { Avatar } from "@/components/ui/Avatar";
 import { RoleBadge, StatusBadge } from "@/components/ui/Badge";
 
-export function MemberCard({ member }: { member: Profile }) {
+// A register row, not a card: the directory reads as the club's member
+// roster — typographic hierarchy and hairline rules instead of a grid of
+// identical boxes.
+export function MemberRow({ member }: { member: Profile }) {
   return (
     <Link
       href={`/membri/${member.id}`}
-      className="group flex flex-col rounded-[var(--radius-lg)] border border-border bg-surface p-5 transition-all duration-200 hover:border-border-strong hover:bg-surface-2"
+      className="group flex items-center gap-4 rounded-[var(--radius)] px-2 py-4 transition-colors hover:bg-surface/70"
     >
-      <div className="flex items-start justify-between gap-3">
-        <Avatar profile={member} size={52} />
-        <StatusBadge status={member.status} />
+      <Avatar profile={member} size={44} />
+      <div className="min-w-0 flex-1">
+        <span className="flex items-baseline gap-2.5">
+          <span className="truncate font-display text-base text-ink transition-colors group-hover:text-accent">
+            {member.name}
+          </span>
+          {member.company && (
+            <span className="hidden truncate text-xs text-ink-faint sm:block">
+              {member.company}
+            </span>
+          )}
+        </span>
+        <p className="mt-0.5 truncate text-sm text-ink-muted">
+          {member.sector} · {member.city}
+        </p>
       </div>
-
-      <h3 className="mt-4 font-display text-lg leading-tight text-ink transition-colors group-hover:text-accent">
-        {member.name}
-      </h3>
-      <div className="mt-1">
-        <RoleBadge role={member.role} />
-      </div>
-
-      <dl className="mt-4 flex flex-col gap-1.5 text-sm text-ink-muted">
-        <div className="flex items-center gap-2">
-          <Briefcase size={14} className="shrink-0 text-ink-faint" />
-          <span className="truncate">{member.sector}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <MapPin size={14} className="shrink-0 text-ink-faint" />
-          <span className="truncate">{member.city}</span>
-        </div>
-      </dl>
+      {member.role !== "member" && (
+        <span className="hidden sm:block">
+          <RoleBadge role={member.role} />
+        </span>
+      )}
+      <StatusBadge status={member.status} />
     </Link>
   );
 }
