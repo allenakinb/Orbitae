@@ -50,7 +50,7 @@ export default function MembriPage() {
       .sort((a, b) => a.name.localeCompare(b.name, "it"));
   }, [profiles, query, status, sector]);
 
-  // La directory è riservata ad Admin e Staff (i membri hanno /account).
+  // La directory è riservata agli Admin (i membri hanno /account).
   if (!mayView) return <Restricted />;
 
   return (

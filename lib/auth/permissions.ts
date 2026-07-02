@@ -10,8 +10,10 @@ export type Permission =
   | "uploadResource"; // upload documents
 
 const MATRIX: Record<Permission, Role[]> = {
-  viewAdmin: ["admin", "staff"],
-  viewMembers: ["admin", "staff"],
+  // Solo gli Admin vedono il pannello e la directory dei membri;
+  // lo Staff naviga come un membro ma può pubblicare e caricare.
+  viewAdmin: ["admin"],
+  viewMembers: ["admin"],
   manageMembers: ["admin"],
   postAnnouncement: ["admin", "staff"],
   uploadResource: ["admin", "staff"],

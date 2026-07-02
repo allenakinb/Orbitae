@@ -4,7 +4,7 @@ import { PageContainer } from "@/components/shell/PageContainer";
 
 // Shown when a signed-in member opens a section outside their role.
 export function Restricted({
-  detail = "Questa sezione è disponibile solo per Admin e Staff.",
+  detail = "Questa sezione è riservata agli Admin del club.",
 }: {
   detail?: string;
 }) {

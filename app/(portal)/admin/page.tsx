@@ -41,7 +41,7 @@ export default function AdminPage() {
           <ShieldAlert size={28} className="mx-auto text-accent" />
           <p className="mt-4 font-display text-xl text-ink">Accesso riservato</p>
           <p className="mt-2 text-sm text-ink-muted">
-            Questa sezione è disponibile solo per Admin e Staff.
+            Questa sezione è riservata agli Admin del club.
           </p>
           <Link
             href="/"

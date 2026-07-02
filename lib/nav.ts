@@ -5,6 +5,7 @@ import {
   FolderClosed,
   MessagesSquare,
   ShieldCheck,
+  UserRound,
   type LucideIcon,
 } from "lucide-react";
 import type { Permission } from "@/lib/auth/permissions";
@@ -23,5 +24,6 @@ export const NAV: NavItem[] = [
   { label: "Bacheca", href: "/bacheca", icon: Megaphone },
   { label: "Documenti", href: "/documenti", icon: FolderClosed },
   { label: "Forum", href: "/forum", icon: MessagesSquare, soon: true },
+  { label: "Account", href: "/account", icon: UserRound },
   { label: "Admin", href: "/admin", icon: ShieldCheck, perm: "viewAdmin" },
 ];
