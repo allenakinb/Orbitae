@@ -1,18 +1,7 @@
 "use client";
 
-import type {
-  AnnouncementInput,
-  InviteInput,
-  Repo,
-  ResourceInput,
-} from "./adapter";
-import {
-  DEMO_PASSWORD,
-  seedAnnouncements,
-  seedEvents,
-  seedProfiles,
-  seedResources,
-} from "./seed";
+import { supabase } from "@/lib/supabase/client";
+import type { AnnouncementInput, Repo, ResourceInput } from "./adapter";
 import type {
   Announcement,
   ClubEvent,
@@ -23,13 +12,12 @@ import type {
 } from "./types";
 
 // ===================================================================
-// Demo backend — reactive in-memory store persisted to localStorage.
+// Supabase-backed store — reactive in-memory cache of the database.
 // Implements Repo. Components subscribe via useSyncExternalStore
-// (see ./hooks.ts) so any mutation re-renders the relevant views.
+// (see ./hooks.ts): reads are synchronous against the cache, writes
+// update the cache immediately and persist to Supabase in background
+// (RLS in /supabase/setup.sql is the real gatekeeper).
 // ===================================================================
-
-// v2: reseeded with the real Orbitae contact list.
-const STORAGE_KEY = "orbitae:db:v2";
 
 interface DB {
   profiles: Profile[];
@@ -38,119 +26,188 @@ interface DB {
   events: ClubEvent[];
 }
 
-function freshDB(): DB {
-  return {
-    profiles: structuredClone(seedProfiles),
-    announcements: structuredClone(seedAnnouncements),
-    resources: structuredClone(seedResources),
-    events: structuredClone(seedEvents),
-  };
-}
+const EMPTY: DB = { profiles: [], announcements: [], resources: [], events: [] };
 
-let db: DB = freshDB();
-let hydrated = false;
+let db: DB = EMPTY;
 const listeners = new Set<() => void>();
 
-// Hydration is deliberately NOT run during render: the server and the
-// first client render both see the seed DB (matching markup), then
-// subscribe() pulls persisted data on mount and notifies subscribers.
-function hydrate() {
-  if (hydrated || typeof window === "undefined") return;
-  hydrated = true;
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) db = JSON.parse(raw) as DB;
-  } catch {
-    /* corrupt storage — fall back to seed */
-  }
-}
-
-function persist() {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-  } catch {
-    /* quota / private mode — keep working in memory */
-  }
-}
-
 function emit() {
-  persist();
   listeners.forEach((l) => l());
 }
 
-function id(prefix: string) {
-  return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
+// --- row mapping (snake_case ⇄ camelCase) --------------------------
+
+interface ProfileRow {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  status: MemberStatus;
+  sector: string;
+  city: string;
+  company: string | null;
+  phone: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  joined_at: string;
+}
+
+function toProfile(r: ProfileRow): Profile {
+  return {
+    id: r.id,
+    name: r.name,
+    email: r.email,
+    role: r.role,
+    status: r.status,
+    sector: r.sector,
+    city: r.city,
+    company: r.company ?? undefined,
+    phone: r.phone ?? undefined,
+    bio: r.bio ?? undefined,
+    avatarUrl: r.avatar_url,
+    joinedAt: r.joined_at,
+  };
+}
+
+// Only the keys present in the patch are sent; `undefined` becomes
+// SQL null (supabase-js drops undefined values, which would make
+// "clear this field" a silent no-op).
+function toProfileRow(patch: Partial<Profile>): Record<string, unknown> {
+  const row: Record<string, unknown> = {};
+  if ("name" in patch) row.name = patch.name;
+  if ("role" in patch) row.role = patch.role;
+  if ("status" in patch) row.status = patch.status;
+  if ("sector" in patch) row.sector = patch.sector;
+  if ("city" in patch) row.city = patch.city;
+  if ("company" in patch) row.company = patch.company ?? null;
+  if ("phone" in patch) row.phone = patch.phone ?? null;
+  if ("bio" in patch) row.bio = patch.bio ?? null;
+  if ("avatarUrl" in patch) row.avatar_url = patch.avatarUrl;
+  return row;
+}
+
+interface AnnouncementRow {
+  id: string;
+  title: string;
+  body: string;
+  author_id: string;
+  pinned: boolean;
+  created_at: string;
+}
+
+function toAnnouncement(r: AnnouncementRow): Announcement {
+  return {
+    id: r.id,
+    title: r.title,
+    body: r.body,
+    authorId: r.author_id,
+    createdAt: r.created_at,
+    pinned: r.pinned || undefined,
+  };
+}
+
+interface ResourceRow {
+  id: string;
+  name: string;
+  category: Resource["category"];
+  file_kind: Resource["fileKind"];
+  file_url: string;
+  size_label: string | null;
+  uploaded_by: string;
+  created_at: string;
+}
+
+function toResource(r: ResourceRow): Resource {
+  return {
+    id: r.id,
+    name: r.name,
+    category: r.category,
+    fileKind: r.file_kind,
+    fileUrl: r.file_url,
+    sizeLabel: r.size_label ?? undefined,
+    uploadedBy: r.uploaded_by,
+    createdAt: r.created_at,
+  };
+}
+
+// --- lifecycle ------------------------------------------------------
+
+// Fetches everything the portal shows in one round. Called after
+// sign-in (RLS only opens the tables to authenticated users).
+export async function loadAll(): Promise<boolean> {
+  const [p, a, r, e] = await Promise.all([
+    supabase.from("profiles").select("*"),
+    supabase.from("announcements").select("*"),
+    supabase.from("resources").select("*"),
+    supabase.from("events").select("*"),
+  ]);
+  const error = p.error ?? a.error ?? r.error ?? e.error;
+  if (error) {
+    console.error("[orbitae] caricamento dati fallito:", error.message);
+    return false;
+  }
+  db = {
+    profiles: (p.data as ProfileRow[]).map(toProfile),
+    announcements: (a.data as AnnouncementRow[]).map(toAnnouncement),
+    resources: (r.data as ResourceRow[]).map(toResource),
+    events: e.data as ClubEvent[],
+  };
+  emit();
+  return true;
+}
+
+export function clearStore() {
+  db = EMPTY;
+  emit();
+}
+
+// A failed background write means the cache lied — resync from server.
+function persistOrResync(promise: PromiseLike<{ error: { message: string } | null }>) {
+  void Promise.resolve(promise).then(({ error }) => {
+    if (error) {
+      console.error("[orbitae] salvataggio fallito:", error.message);
+      void loadAll();
+    }
+  });
 }
 
 // --- subscription surface (used by hooks) -------------------------
 
 export function subscribe(listener: () => void) {
   listeners.add(listener);
-  // First subscriber on the client pulls persisted state, then refreshes.
-  if (!hydrated) {
-    const before = db;
-    hydrate();
-    if (db !== before) listener();
-  }
-  return () => listeners.delete(listener);
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
 export function snapshot(): DB {
   return db;
 }
 
-export function resetDemoData() {
-  db = freshDB();
-  emit();
-}
-
 // --- Repo implementation ------------------------------------------
 
-export const demoRepo: Repo = {
-  authenticate(email, password) {
-    hydrate();
-    const profile = db.profiles.find(
-      (p) => p.email.toLowerCase() === email.trim().toLowerCase(),
-    );
-    if (!profile) return null;
-    if (password !== DEMO_PASSWORD) return null;
-    if (profile.status === "suspended" || profile.status === "expired")
-      return null;
-    return profile;
-  },
-
+export const repo: Repo = {
   listProfiles() {
-    return snapshot().profiles;
+    return db.profiles;
   },
 
   getProfile(pid) {
-    return snapshot().profiles.find((p) => p.id === pid);
+    return db.profiles.find((p) => p.id === pid);
   },
 
   updateProfile(pid, patch) {
-    const p = db.profiles.find((x) => x.id === pid);
-    if (!p) return undefined;
-    Object.assign(p, patch);
-    emit();
-    return p;
-  },
-
-  inviteMember(input: InviteInput) {
-    const member: Profile = {
-      id: id("u"),
-      name: input.name,
-      email: input.email,
-      role: input.role,
-      sector: input.sector,
-      city: input.city,
-      avatarUrl: null,
-      status: "pending",
-      joinedAt: new Date().toISOString().slice(0, 10),
+    const prev = db.profiles.find((x) => x.id === pid);
+    if (!prev) return undefined;
+    const next = { ...prev, ...patch };
+    db = {
+      ...db,
+      profiles: db.profiles.map((p) => (p.id === pid ? next : p)),
     };
-    db.profiles.push(member);
     emit();
-    return member;
+    persistOrResync(
+      supabase.from("profiles").update(toProfileRow(patch)).eq("id", pid),
+    );
+    return next;
   },
 
   setStatus(pid, status: MemberStatus) {
@@ -162,7 +219,7 @@ export const demoRepo: Repo = {
   },
 
   listAnnouncements() {
-    return [...snapshot().announcements].sort((a, b) => {
+    return [...db.announcements].sort((a, b) => {
       if (!!b.pinned !== !!a.pinned) return b.pinned ? 1 : -1;
       return b.createdAt.localeCompare(a.createdAt);
     });
@@ -170,26 +227,35 @@ export const demoRepo: Repo = {
 
   createAnnouncement(input: AnnouncementInput) {
     const item: Announcement = {
-      id: id("a"),
+      id: crypto.randomUUID(),
       title: input.title,
       body: input.body,
       authorId: input.authorId,
       createdAt: new Date().toISOString(),
     };
-    db.announcements.push(item);
+    db = { ...db, announcements: [...db.announcements, item] };
     emit();
+    persistOrResync(
+      supabase.from("announcements").insert({
+        id: item.id,
+        title: item.title,
+        body: item.body,
+        author_id: item.authorId,
+        created_at: item.createdAt,
+      }),
+    );
     return item;
   },
 
   listResources() {
-    return [...snapshot().resources].sort((a, b) =>
+    return [...db.resources].sort((a, b) =>
       b.createdAt.localeCompare(a.createdAt),
     );
   },
 
   createResource(input: ResourceInput) {
     const item: Resource = {
-      id: id("r"),
+      id: crypto.randomUUID(),
       name: input.name,
       category: input.category,
       fileKind: input.fileKind,
@@ -198,14 +264,26 @@ export const demoRepo: Repo = {
       uploadedBy: input.uploadedBy,
       createdAt: new Date().toISOString(),
     };
-    db.resources.push(item);
+    db = { ...db, resources: [...db.resources, item] };
     emit();
+    persistOrResync(
+      supabase.from("resources").insert({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        file_kind: item.fileKind,
+        file_url: item.fileUrl,
+        size_label: item.sizeLabel ?? null,
+        uploaded_by: item.uploadedBy,
+        created_at: item.createdAt,
+      }),
+    );
     return item;
   },
 
   listEvents() {
     const today = new Date().toISOString().slice(0, 10);
-    return [...snapshot().events]
+    return [...db.events]
       .filter((e) => e.date >= today)
       .sort((a, b) => a.date.localeCompare(b.date));
   },

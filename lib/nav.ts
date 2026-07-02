@@ -19,7 +19,7 @@ export interface NavItem {
 
 export const NAV: NavItem[] = [
   { label: "Home", href: "/", icon: LayoutGrid },
-  { label: "Membri", href: "/membri", icon: Users },
+  { label: "Membri", href: "/membri", icon: Users, perm: "viewMembers" },
   { label: "Bacheca", href: "/bacheca", icon: Megaphone },
   { label: "Documenti", href: "/documenti", icon: FolderClosed },
   { label: "Forum", href: "/forum", icon: MessagesSquare, soon: true },

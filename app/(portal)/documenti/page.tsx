@@ -11,7 +11,8 @@ import {
   X,
 } from "lucide-react";
 import { useProfiles, useResources } from "@/lib/data/hooks";
-import { demoRepo } from "@/lib/data/store";
+import { repo } from "@/lib/data/store";
+import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { can } from "@/lib/auth/permissions";
 import type { Resource, ResourceCategory } from "@/lib/data/types";
@@ -45,6 +46,25 @@ function DocumentRow({
 }) {
   const Icon = KIND_ICON[resource.fileKind];
   const downloadable = resource.fileUrl !== "#";
+
+  // fileUrl is either an absolute URL (links) or an object path in the
+  // private "documenti" bucket — the latter opens via a signed URL.
+  async function open() {
+    if (!downloadable) return;
+    if (/^https?:\/\//.test(resource.fileUrl)) {
+      window.open(resource.fileUrl, "_blank", "noopener");
+      return;
+    }
+    const { data, error } = await supabase.storage
+      .from("documenti")
+      .createSignedUrl(resource.fileUrl, 60 * 10);
+    if (error || !data) {
+      console.error("[orbitae] download fallito:", error?.message);
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener");
+  }
+
   return (
     <div className="group flex items-center gap-4 rounded-[var(--radius)] px-2 py-4 transition-colors hover:bg-surface/70">
       <Icon size={18} className="shrink-0 text-ink-faint" />
@@ -58,15 +78,16 @@ function DocumentRow({
           {formatDate(resource.createdAt)}
         </p>
       </div>
-      <a
-        href={resource.fileUrl}
-        download={downloadable ? resource.name : undefined}
+      <button
+        type="button"
+        onClick={open}
+        disabled={!downloadable}
         aria-label={`Scarica ${resource.name}`}
-        className="inline-flex items-center gap-1.5 px-1 text-sm font-medium text-ink-muted transition-colors hover:text-accent"
+        className="inline-flex items-center gap-1.5 px-1 text-sm font-medium text-ink-muted transition-colors hover:text-accent disabled:cursor-not-allowed disabled:opacity-50"
       >
         <Download size={15} />
         <span className="hidden sm:inline">Scarica</span>
-      </a>
+      </button>
     </div>
   );
 }
@@ -81,6 +102,8 @@ export default function DocumentiPage() {
   const [category, setCategory] = useState<ResourceCategory>("Verbali");
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const uploaderName = useMemo(
@@ -94,19 +117,35 @@ export default function DocumentiPage() {
     if (f && !name) setName(f.name.replace(/\.[^.]+$/, ""));
   }
 
-  function upload(e: React.FormEvent) {
+  async function upload(e: React.FormEvent) {
     e.preventDefault();
-    if (!user || !file || !name.trim()) return;
+    if (!user || !file || !name.trim() || uploading) return;
     const kind: Resource["fileKind"] = file.type.startsWith("image/")
       ? "image"
       : file.type === "application/pdf"
         ? "pdf"
         : "doc";
-    demoRepo.createResource({
+
+    // The file lives in the private "documenti" bucket; the DB row keeps
+    // only the object path, resolved to a signed URL at download time.
+    setUploading(true);
+    setUploadError(null);
+    const path = `${crypto.randomUUID()}/${file.name}`;
+    const { error } = await supabase.storage
+      .from("documenti")
+      .upload(path, file);
+    setUploading(false);
+    if (error) {
+      setUploadError("Caricamento non riuscito. Riprova.");
+      console.error("[orbitae] upload fallito:", error.message);
+      return;
+    }
+
+    repo.createResource({
       name: name.trim(),
       category,
       fileKind: kind,
-      fileUrl: URL.createObjectURL(file),
+      fileUrl: path,
       sizeLabel: formatBytes(file.size),
       uploadedBy: user.id,
     });
@@ -182,12 +221,20 @@ export default function DocumentiPage() {
               />
             </label>
           </div>
+          {uploadError && (
+            <p
+              role="alert"
+              className="mt-4 rounded-[var(--radius)] border border-accent/40 bg-accent-soft px-3 py-2 text-sm text-accent-hover"
+            >
+              {uploadError}
+            </p>
+          )}
           <div className="mt-4 flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
               Annulla
             </Button>
-            <Button type="submit" disabled={!file || !name.trim()}>
-              Carica
+            <Button type="submit" disabled={!file || !name.trim() || uploading}>
+              {uploading ? "Carico…" : "Carica"}
             </Button>
           </div>
         </form>

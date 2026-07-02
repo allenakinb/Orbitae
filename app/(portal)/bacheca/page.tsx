@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { useAnnouncements, useProfiles } from "@/lib/data/hooks";
-import { demoRepo } from "@/lib/data/store";
+import { repo } from "@/lib/data/store";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { can } from "@/lib/auth/permissions";
 import { PageContainer } from "@/components/shell/PageContainer";
@@ -30,7 +30,7 @@ export default function BachecaPage() {
   function publish(e: React.FormEvent) {
     e.preventDefault();
     if (!user || !title.trim() || !body.trim()) return;
-    demoRepo.createAnnouncement({
+    repo.createAnnouncement({
       title: title.trim(),
       body: body.trim(),
       authorId: user.id,

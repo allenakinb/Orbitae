@@ -1,10 +1,10 @@
 "use client";
 
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useMemo } from "react";
 import Link from "next/link";
-import { ShieldAlert, UserPlus, X } from "lucide-react";
+import { ShieldAlert, UserPlus } from "lucide-react";
 import { useProfiles } from "@/lib/data/hooks";
-import { demoRepo } from "@/lib/data/store";
+import { repo } from "@/lib/data/store";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { can } from "@/lib/auth/permissions";
 import type { MemberStatus, Role } from "@/lib/data/types";
@@ -13,14 +13,12 @@ import { PageContainer } from "@/components/shell/PageContainer";
 import { SectionTitle } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { RoleBadge, StatusBadge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { Field, Input, Select } from "@/components/ui/Field";
+import { Select } from "@/components/ui/Field";
 
 export default function AdminPage() {
   const { user } = useAuth();
   const profiles = useProfiles();
   const mayManage = can(user?.role, "manageMembers");
-  const [open, setOpen] = useState(false);
 
   const sorted = useMemo(
     () => [...profiles].sort((a, b) => a.name.localeCompare(b.name, "it")),
@@ -62,16 +60,10 @@ export default function AdminPage() {
         title="Pannello Admin"
         subtitle={
           mayManage
-            ? "Gestisci i membri del network, lo stato e gli inviti."
+            ? "Gestisci i membri del network: ruolo e stato di ognuno."
             : "Consultazione dei membri del network (sola lettura)."
         }
-      >
-        {mayManage && !open && (
-          <Button size="sm" onClick={() => setOpen(true)}>
-            <UserPlus size={16} /> Invita membro
-          </Button>
-        )}
-      </SectionTitle>
+      />
 
       {/* Summary — quiet inline numbers, not a card row */}
       <div className="mt-6 flex flex-wrap items-baseline gap-x-3 gap-y-2 border-y border-border py-3.5 text-sm text-ink-muted">
@@ -96,7 +88,19 @@ export default function AdminPage() {
         ))}
       </div>
 
-      {mayManage && open && <InviteForm onClose={() => setOpen(false)} />}
+      {mayManage && (
+        <p className="mt-4 flex items-start gap-2.5 rounded-[var(--radius)] border border-border bg-surface px-4 py-3 text-sm text-ink-muted">
+          <UserPlus size={16} className="mt-0.5 shrink-0 text-ink-faint" />
+          <span>
+            I nuovi accessi (email + password) si creano con lo script{" "}
+            <code className="rounded bg-surface-2 px-1.5 py-0.5 text-xs">
+              scripts/create-users.mjs
+            </code>{" "}
+            o dalla dashboard Supabase. Da qui gestisci ruolo e stato dei
+            membri esistenti.
+          </span>
+        </p>
+      )}
 
       {/* Members table */}
       <div className="mt-6 overflow-x-auto rounded-[var(--radius-lg)] border border-border bg-surface">
@@ -141,7 +145,7 @@ export default function AdminPage() {
                     <Select
                       value={m.role}
                       onChange={(e) =>
-                        demoRepo.setRole(m.id, e.target.value as Role)
+                        repo.setRole(m.id, e.target.value as Role)
                       }
                       aria-label={`Ruolo di ${m.name}`}
                       className="h-9 w-[120px] text-sm"
@@ -165,7 +169,7 @@ export default function AdminPage() {
                     <Select
                       value={m.status}
                       onChange={(e) =>
-                        demoRepo.setStatus(m.id, e.target.value as MemberStatus)
+                        repo.setStatus(m.id, e.target.value as MemberStatus)
                       }
                       aria-label={`Stato di ${m.name}`}
                       className="h-9 w-[130px] text-sm"
@@ -185,118 +189,5 @@ export default function AdminPage() {
         </table>
       </div>
     </PageContainer>
-  );
-}
-
-function InviteForm({ onClose }: { onClose: () => void }) {
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    role: "member" as Role,
-    sector: "",
-    city: "",
-  });
-  const [done, setDone] = useState<string | null>(null);
-
-  function set<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
-    setForm((f) => ({ ...f, [k]: v }));
-  }
-
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.name.trim() || !form.email.trim()) return;
-    const created = demoRepo.inviteMember({
-      name: form.name.trim(),
-      email: form.email.trim(),
-      role: form.role,
-      sector: form.sector.trim() || "—",
-      city: form.city.trim() || "—",
-    });
-    setDone(created.name);
-    setForm({ name: "", email: "", role: "member", sector: "", city: "" });
-  }
-
-  return (
-    <form
-      onSubmit={submit}
-      className="mt-6 rounded-[var(--radius-lg)] border border-border bg-surface p-5 motion-safe:animate-fade-rise"
-    >
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="font-display text-lg text-ink">Invita un nuovo membro</h2>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Chiudi"
-          className="rounded-[var(--radius)] p-1 text-ink-muted hover:bg-surface-2 hover:text-ink"
-        >
-          <X size={18} />
-        </button>
-      </div>
-
-      {done && (
-        <p className="mb-4 rounded-[var(--radius)] border border-[var(--color-active)]/40 bg-[var(--color-active-soft)] px-3 py-2 text-sm text-[var(--color-active)]">
-          Invito creato per <strong>{done}</strong> — il membro è in attesa di
-          attivazione.
-        </p>
-      )}
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Nome e cognome" htmlFor="i-name">
-          <Input
-            id="i-name"
-            value={form.name}
-            onChange={(e) => set("name", e.target.value)}
-            placeholder="Es. Giulia Rossi"
-            required
-          />
-        </Field>
-        <Field label="Email" htmlFor="i-email">
-          <Input
-            id="i-email"
-            type="email"
-            value={form.email}
-            onChange={(e) => set("email", e.target.value)}
-            placeholder="nome@azienda.it"
-            required
-          />
-        </Field>
-        <Field label="Ruolo" htmlFor="i-role">
-          <Select
-            id="i-role"
-            value={form.role}
-            onChange={(e) => set("role", e.target.value as Role)}
-          >
-            <option value="member">Membro</option>
-            <option value="staff">Staff</option>
-            <option value="admin">Admin</option>
-          </Select>
-        </Field>
-        <Field label="Settore" htmlFor="i-sector">
-          <Input
-            id="i-sector"
-            value={form.sector}
-            onChange={(e) => set("sector", e.target.value)}
-            placeholder="Es. Tecnologia"
-          />
-        </Field>
-        <Field label="Città" htmlFor="i-city">
-          <Input
-            id="i-city"
-            value={form.city}
-            onChange={(e) => set("city", e.target.value)}
-            placeholder="Es. Milano"
-          />
-        </Field>
-      </div>
-
-      <div className="mt-5 flex justify-end gap-2">
-        <Button type="button" variant="ghost" onClick={onClose}>
-          Chiudi
-        </Button>
-        <Button type="submit" disabled={!form.name.trim() || !form.email.trim()}>
-          <UserPlus size={16} /> Crea invito
-        </Button>
-      </div>
-    </form>
   );
 }

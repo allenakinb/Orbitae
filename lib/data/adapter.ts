@@ -11,19 +11,11 @@ import type {
 // ===================================================================
 // Repo — the single seam between the UI and the data backend.
 //
-// The demo implementation (./store.ts) keeps everything in memory +
-// localStorage. To go live, implement this same interface against
-// Supabase (see /supabase/schema.sql) and swap the export in ./index.ts.
-// No UI code references the backend directly.
+// Implemented by the Supabase-backed store (./store.ts): synchronous
+// reads against a reactive cache, write-through mutations. Auth lives
+// in /lib/auth/AuthProvider (Supabase Auth); creating new members
+// requires the admin API — see /scripts/create-users.mjs.
 // ===================================================================
-
-export interface InviteInput {
-  name: string;
-  email: string;
-  role: Role;
-  sector: string;
-  city: string;
-}
 
 export interface AnnouncementInput {
   title: string;
@@ -41,12 +33,9 @@ export interface ResourceInput {
 }
 
 export interface Repo {
-  authenticate(email: string, password: string): Profile | null;
-
   listProfiles(): Profile[];
   getProfile(id: string): Profile | undefined;
   updateProfile(id: string, patch: Partial<Profile>): Profile | undefined;
-  inviteMember(input: InviteInput): Profile;
   setStatus(id: string, status: MemberStatus): Profile | undefined;
   setRole(id: string, role: Role): Profile | undefined;
 

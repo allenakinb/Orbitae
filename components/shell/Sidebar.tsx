@@ -93,7 +93,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
       <div className="mt-auto border-t border-border pt-3">
         <Link
-          href="/membri"
+          href="/account"
           onClick={onNavigate}
           className="flex items-center gap-3 rounded-[var(--radius)] px-2 py-2 transition-colors hover:bg-surface-2/60"
         >

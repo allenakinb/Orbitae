@@ -4,6 +4,7 @@ import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { can } from "@/lib/auth/permissions";
 import {
   useAnnouncements,
   useProfiles,
@@ -115,7 +116,13 @@ export default function HomePage() {
         className="mt-10 flex flex-wrap items-baseline justify-center gap-x-3 gap-y-2 border-y border-border py-4"
       >
         {[
-          { value: activeCount, label: "membri attivi", href: "/membri" },
+          {
+            value: activeCount,
+            label: "membri attivi",
+            // La directory è riservata ad Admin/Staff: per i membri il
+            // numero resta, il link punta all'orbita stessa.
+            href: can(user?.role, "viewMembers") ? "/membri" : "#novita",
+          },
           { value: events.length, label: "prossimi eventi", href: "#eventi" },
           { value: announcements.length, label: "annunci", href: "/bacheca" },
           { value: resources.length, label: "documenti", href: "/documenti" },

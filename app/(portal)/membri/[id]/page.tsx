@@ -15,7 +15,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { useProfile } from "@/lib/data/hooks";
-import { demoRepo } from "@/lib/data/store";
+import { repo } from "@/lib/data/store";
+import { Restricted } from "@/components/content/Restricted";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { can } from "@/lib/auth/permissions";
 import type { MemberStatus, Profile, Role } from "@/lib/data/types";
@@ -25,7 +26,7 @@ import { PageContainer } from "@/components/shell/PageContainer";
 import { Avatar } from "@/components/ui/Avatar";
 import { RoleBadge, StatusBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Field, Input, Label, Select, Textarea } from "@/components/ui/Field";
+import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 
 function InfoRow({
   icon: Icon,
@@ -62,6 +63,11 @@ export default function MemberDetailPage() {
   const { user } = useAuth();
   const [editing, setEditing] = useState(false);
 
+  // I membri vedono solo il proprio profilo; la directory è di Admin/Staff.
+  if (!can(user?.role, "viewMembers") && user?.id !== params.id) {
+    return <Restricted />;
+  }
+
   if (!profile) {
     return (
       <PageContainer>
@@ -81,14 +87,15 @@ export default function MemberDetailPage() {
   const isAdmin = can(user?.role, "manageMembers");
   const isOwn = user?.id === profile.id;
   const canEdit = isAdmin || isOwn;
+  const mayViewDirectory = can(user?.role, "viewMembers");
 
   return (
     <PageContainer>
       <Link
-        href="/membri"
+        href={mayViewDirectory ? "/membri" : "/account"}
         className="inline-flex items-center gap-1.5 text-sm text-ink-muted transition-colors hover:text-ink"
       >
-        <ArrowLeft size={16} /> Directory
+        <ArrowLeft size={16} /> {mayViewDirectory ? "Directory" : "Account"}
       </Link>
 
       {editing ? (
@@ -197,7 +204,7 @@ function EditForm({
   }
 
   function save() {
-    demoRepo.updateProfile(profile.id, {
+    repo.updateProfile(profile.id, {
       name: form.name.trim() || profile.name,
       company: form.company.trim() || undefined,
       sector: form.sector.trim(),

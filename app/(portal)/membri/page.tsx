@@ -3,8 +3,11 @@
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { useProfiles } from "@/lib/data/hooks";
+import { useAuth } from "@/lib/auth/AuthProvider";
+import { can } from "@/lib/auth/permissions";
 import type { MemberStatus } from "@/lib/data/types";
 import { PageContainer } from "@/components/shell/PageContainer";
+import { Restricted } from "@/components/content/Restricted";
 import { SectionTitle } from "@/components/ui/Card";
 import { MemberRow } from "@/components/content/MemberCard";
 import { Input, Select } from "@/components/ui/Field";
@@ -19,10 +22,12 @@ const STATUS_FILTERS: { value: MemberStatus | "all"; label: string }[] = [
 ];
 
 export default function MembriPage() {
+  const { user } = useAuth();
   const profiles = useProfiles();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<MemberStatus | "all">("all");
   const [sector, setSector] = useState("all");
+  const mayView = can(user?.role, "viewMembers");
 
   const sectors = useMemo(
     () => Array.from(new Set(profiles.map((p) => p.sector))).sort(),
@@ -44,6 +49,9 @@ export default function MembriPage() {
       )
       .sort((a, b) => a.name.localeCompare(b.name, "it"));
   }, [profiles, query, status, sector]);
+
+  // La directory è riservata ad Admin e Staff (i membri hanno /account).
+  if (!mayView) return <Restricted />;
 
   return (
     <PageContainer wide>

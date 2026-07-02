@@ -8,7 +8,6 @@ import { OrbitMark } from "@/components/brand/OrbitMark";
 import { Wordmark } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Label } from "@/components/ui/Field";
-import { DEMO_LOGINS, DEMO_PASSWORD } from "@/lib/data/seed";
 
 export default function LoginPage() {
   const { login, user, ready } = useAuth();
@@ -23,23 +22,17 @@ export default function LoginPage() {
     if (ready && user) router.replace("/");
   }, [ready, user, router]);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setPending(true);
-    const res = login(email, password);
+    const res = await login(email, password);
     if (!res.ok) {
       setError(res.error ?? "Accesso non riuscito.");
       setPending(false);
       return;
     }
     router.replace("/");
-  }
-
-  function quickFill(addr: string) {
-    setEmail(addr);
-    setPassword(DEMO_PASSWORD);
-    setError(null);
   }
 
   return (
@@ -79,12 +72,7 @@ export default function LoginPage() {
             </Field>
 
             <div>
-              <div className="mb-1.5 flex items-center justify-between">
-                <Label htmlFor="password" className="mb-0">
-                  Password
-                </Label>
-                <span className="text-xs text-ink-faint">demo: orbitae</span>
-              </div>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -112,23 +100,10 @@ export default function LoginPage() {
           </div>
         </form>
 
-        <div className="mt-6">
-          <p className="mb-2.5 flex items-center justify-center gap-1.5 text-xs text-ink-faint">
-            <Lock size={12} /> Accesso solo su invito · prova un profilo demo
-          </p>
-          <div className="flex flex-wrap justify-center gap-2">
-            {DEMO_LOGINS.map((d) => (
-              <button
-                key={d.email}
-                type="button"
-                onClick={() => quickFill(d.email)}
-                className="rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-accent hover:text-accent"
-              >
-                {d.role}
-              </button>
-            ))}
-          </div>
-        </div>
+        <p className="mt-6 flex items-center justify-center gap-1.5 text-xs text-ink-faint">
+          <Lock size={12} /> Accesso solo su invito · credenziali dalla
+          segreteria
+        </p>
       </div>
     </main>
   );
