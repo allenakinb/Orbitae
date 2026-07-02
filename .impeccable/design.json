@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-02T00:00:00Z",
+  "title": "Design System: Orbitae",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "Orbit Red",
+        "canonical": "oklch(0.621 0.208 35)",
+        "tonalRamp": [
+          "oklch(0.28 0.12 34)",
+          "oklch(0.37 0.15 34)",
+          "oklch(0.46 0.18 34)",
+          "oklch(0.566 0.2 34)",
+          "oklch(0.621 0.208 35)",
+          "oklch(0.671 0.196 36)",
+          "oklch(0.76 0.15 38)",
+          "oklch(0.88 0.08 42)"
+        ]
+      },
+      "bg": {
+        "role": "neutral",
+        "displayName": "Void",
+        "canonical": "#0a0a0a",
+        "tonalRamp": [
+          "#0a0a0a",
+          "oklch(0.176 0.006 35)",
+          "oklch(0.214 0.008 35)",
+          "oklch(0.246 0.009 35)",
+          "oklch(0.32 0.012 35)",
+          "oklch(0.42 0.016 35)",
+          "oklch(0.6 0.01 40)",
+          "oklch(0.748 0.008 45)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(0.971 0.003 60)",
+        "tonalRamp": [
+          "oklch(0.6 0.01 40)",
+          "oklch(0.68 0.009 42)",
+          "oklch(0.748 0.008 45)",
+          "oklch(0.82 0.006 50)",
+          "oklch(0.88 0.005 55)",
+          "oklch(0.93 0.004 58)",
+          "oklch(0.971 0.003 60)",
+          "oklch(0.99 0.002 60)"
+        ]
+      },
+      "active": {
+        "role": "tertiary",
+        "displayName": "Active Green",
+        "canonical": "oklch(0.74 0.15 150)",
+        "tonalRamp": [
+          "oklch(0.34 0.08 150)",
+          "oklch(0.44 0.1 150)",
+          "oklch(0.54 0.12 150)",
+          "oklch(0.64 0.14 150)",
+          "oklch(0.74 0.15 150)",
+          "oklch(0.82 0.13 150)",
+          "oklch(0.89 0.09 150)",
+          "oklch(0.95 0.05 150)"
+        ]
+      },
+      "suspended": {
+        "role": "tertiary",
+        "displayName": "Suspended Amber",
+        "canonical": "oklch(0.8 0.15 80)",
+        "tonalRamp": [
+          "oklch(0.4 0.08 80)",
+          "oklch(0.5 0.1 80)",
+          "oklch(0.6 0.12 80)",
+          "oklch(0.7 0.14 80)",
+          "oklch(0.8 0.15 80)",
+          "oklch(0.87 0.12 80)",
+          "oklch(0.92 0.08 80)",
+          "oklch(0.96 0.04 80)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "wordmark": { "displayName": "Wordmark", "purpose": "The Orbitae lockup only — the one place with positive tracking and uppercase." },
+      "display": { "displayName": "Display", "purpose": "Page and section titles; the Home greeting name. text-wrap: balance." },
+      "title": { "displayName": "Title", "purpose": "In-page section headings like 'Dalla bacheca'." },
+      "body": { "displayName": "Body", "purpose": "Running text and descriptions; cap measure at 65-75ch." },
+      "label": { "displayName": "Label", "purpose": "Field labels, badges, meta rows; uppercase only for micro-tags." }
+    },
+    "shadows": [
+      { "name": "accent-glow-button", "value": "0 6px 20px -8px var(--color-accent-glow)", "purpose": "Primary button warm bloom at rest; deepens to 0 8px 26px -8px on hover." },
+      { "name": "accent-glow-orbit", "value": "0 0 0 3px var(--color-bg), 0 0 22px -2px var(--color-accent-glow)", "purpose": "Hovered/focused member avatar, ringed against the sky and lit from within." },
+      { "name": "tooltip-lift", "value": "0 20px 25px -5px rgba(0,0,0,0.5)", "purpose": "The only conventional shadow — the floating orbit label above the rotating rings." }
+    ],
+    "motion": [
+      { "name": "ease-out-quart", "value": "cubic-bezier(0.25, 1, 0.5, 1)", "purpose": "Default easing for state transitions (buttons, links, borders) at ~150ms." },
+      { "name": "ease-out-expo", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Entrances and larger transforms (fade-rise, avatar scale on hover)." },
+      { "name": "orbit-spin", "value": "88s-168s linear infinite", "purpose": "Ring rotation; inner rings faster, outer slower and reversed. Paused under prefers-reduced-motion." },
+      { "name": "fade-rise", "value": "0.6s ease-out-expo both (translateY 10px -> 0, opacity 0 -> 1)", "purpose": "Section/page entrance." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single decisive action per view — Orbit Red with a warm glow.",
+      "html": "<button class=\"ds-btn-primary\">Entra <svg viewBox=\"0 0 24 24\" width=\"17\" height=\"17\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14M12 5l7 7-7 7\"/></svg></button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 20px; border: none; border-radius: var(--radius, 10px); background: var(--color-accent, oklch(0.621 0.208 35)); color: var(--color-accent-ink, oklch(0.99 0.01 50)); font-family: Archivo, ui-sans-serif, system-ui, sans-serif; font-weight: 600; font-size: 0.95rem; white-space: nowrap; cursor: pointer; box-shadow: 0 6px 20px -8px var(--color-accent-glow, oklch(0.621 0.208 35 / 0.45)); transition: background .15s cubic-bezier(0.25,1,0.5,1), box-shadow .15s cubic-bezier(0.25,1,0.5,1); } .ds-btn-primary:hover { background: var(--color-accent-hover, oklch(0.671 0.196 36)); box-shadow: 0 8px 26px -8px var(--color-accent-glow, oklch(0.621 0.208 35 / 0.45)); } .ds-btn-primary:active { background: var(--color-accent-press, oklch(0.566 0.2 34)); } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-accent, oklch(0.621 0.208 35)); outline-offset: 2px; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary action — transparent, turns Orbit Red on hover.",
+      "html": "<button class=\"ds-btn-outline\">Annulla</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 20px; border: 1px solid var(--color-border-strong, oklch(0.42 0.016 35)); border-radius: var(--radius, 10px); background: transparent; color: var(--color-ink, oklch(0.971 0.003 60)); font-family: Archivo, ui-sans-serif, system-ui, sans-serif; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: border-color .15s, color .15s; } .ds-btn-outline:hover { border-color: var(--color-accent, oklch(0.621 0.208 35)); color: var(--color-accent, oklch(0.621 0.208 35)); } .ds-btn-outline:focus-visible { outline: 2px solid var(--color-accent, oklch(0.621 0.208 35)); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Recessed Void well with a hairline border; Orbit Red focus ring.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"nome@orbitae.club\" />",
+      "css": ".ds-input { width: 100%; height: 44px; padding: 0 14px; border: 1px solid var(--color-border, oklch(0.32 0.012 35)); border-radius: var(--radius, 10px); background: color-mix(in oklab, #0a0a0a 40%, transparent); color: var(--color-ink, oklch(0.971 0.003 60)); font-family: Archivo, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; transition: border-color .15s, box-shadow .15s; } .ds-input::placeholder { color: var(--color-ink-faint, oklch(0.6 0.01 40)); } .ds-input:focus { outline: none; border-color: var(--color-accent, oklch(0.621 0.208 35)); box-shadow: 0 0 0 2px var(--color-accent-soft, oklch(0.621 0.208 35 / 0.14)); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Flat surface on the void, single hairline border, no shadow.",
+      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Prossimi eventi</h3><p class=\"ds-card-body\">Cena del network — 12 Lug, Milano.</p></div>",
+      "css": ".ds-card { padding: 20px; border: 1px solid var(--color-border, oklch(0.32 0.012 35)); border-radius: var(--radius-lg, 14px); background: var(--color-surface, oklch(0.176 0.006 35)); font-family: Archivo, ui-sans-serif, system-ui, sans-serif; } .ds-card-title { margin: 0 0 6px; font-weight: 800; font-size: 1.125rem; letter-spacing: -0.01em; color: var(--color-ink, oklch(0.971 0.003 60)); } .ds-card-body { margin: 0; font-size: 0.875rem; line-height: 1.55; color: var(--color-ink-muted, oklch(0.748 0.008 45)); }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge-status",
+      "description": "Full pill; dot + label so status never relies on color alone.",
+      "html": "<span class=\"ds-badge-status\"><span class=\"ds-dot\"></span>Attivo</span>",
+      "css": ".ds-badge-status { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 9999px; font-family: Archivo, ui-sans-serif, system-ui, sans-serif; font-size: 0.75rem; font-weight: 600; color: var(--color-active, oklch(0.74 0.15 150)); background: var(--color-active-soft, oklch(0.74 0.15 150 / 0.16)); } .ds-dot { width: 6px; height: 6px; border-radius: 9999px; background: var(--color-active, oklch(0.74 0.15 150)); }"
+    },
+    {
+      "name": "Role Badge (Admin)",
+      "kind": "chip",
+      "refersTo": "badge-status",
+      "description": "Admin role marker — the only badge that spends Orbit Red.",
+      "html": "<span class=\"ds-badge-role-admin\">Admin</span>",
+      "css": ".ds-badge-role-admin { display: inline-flex; align-items: center; padding: 2px 10px; border: 1px solid transparent; border-radius: 9999px; font-family: Archivo, ui-sans-serif, system-ui, sans-serif; font-size: 0.75rem; font-weight: 600; color: var(--color-accent-hover, oklch(0.671 0.196 36)); background: var(--color-accent-soft, oklch(0.621 0.208 35 / 0.14)); }"
+    },
+    {
+      "name": "Sidebar Nav Item (Active)",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Active rail item — accent-soft wash, Orbit Red icon, 3px red rail nub.",
+      "html": "<a class=\"ds-nav-item ds-nav-active\" href=\"#\"><span class=\"ds-nav-rail\"></span><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75\"/></svg><span>Membri</span></a>",
+      "css": ".ds-nav-item { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius, 10px); font-family: Archivo, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; text-decoration: none; color: var(--color-ink-muted, oklch(0.748 0.008 45)); transition: background .15s, color .15s; } .ds-nav-item:hover { background: var(--color-surface-2, oklch(0.214 0.008 35)); color: var(--color-ink, oklch(0.971 0.003 60)); } .ds-nav-active { background: var(--color-accent-soft, oklch(0.621 0.208 35 / 0.14)); color: var(--color-ink, oklch(0.971 0.003 60)); } .ds-nav-active svg { color: var(--color-accent, oklch(0.621 0.208 35)); } .ds-nav-rail { position: absolute; left: 0; top: 50%; width: 3px; height: 20px; transform: translateY(-50%); border-radius: 0 9999px 9999px 0; background: var(--color-accent, oklch(0.621 0.208 35)); }"
+    },
+    {
+      "name": "Stat Tile",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Compact metric tile — a supporting glance, never the headline. Accent icon, display number, muted label.",
+      "html": "<div class=\"ds-stat\"><svg class=\"ds-stat-icon\" viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75\"/></svg><div class=\"ds-stat-value\">42</div><div class=\"ds-stat-label\">Membri attivi</div></div>",
+      "css": ".ds-stat { padding: 16px; border: 1px solid var(--color-border, oklch(0.32 0.012 35)); border-radius: var(--radius-lg, 14px); background: var(--color-surface, oklch(0.176 0.006 35)); font-family: Archivo, ui-sans-serif, system-ui, sans-serif; } .ds-stat-icon { color: var(--color-accent, oklch(0.621 0.208 35)); } .ds-stat-value { margin-top: 12px; font-weight: 800; font-size: 1.5rem; line-height: 1; letter-spacing: -0.02em; color: var(--color-ink, oklch(0.971 0.003 60)); } .ds-stat-label { margin-top: 4px; font-size: 0.75rem; color: var(--color-ink-muted, oklch(0.748 0.008 45)); }"
+    },
+    {
+      "name": "Announcement Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Bacheca post. Pinned variant swaps the hairline for a soft Orbit Red border and an 'In evidenza' marker; author footer sits above a top divider.",
+      "html": "<article class=\"ds-post ds-post-pinned\"><div class=\"ds-post-meta\"><span class=\"ds-post-pin\"><svg viewBox=\"0 0 24 24\" width=\"12\" height=\"12\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 17v5M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z\"/></svg> In evidenza</span><span class=\"ds-post-time\">2 giorni fa</span></div><h3 class=\"ds-post-title\">Cena del network — Luglio</h3><p class=\"ds-post-body\">Prenotazioni aperte per la cena mensile. Posti limitati ai membri attivi.</p><div class=\"ds-post-author\"><span class=\"ds-post-avatar\">MF</span><span class=\"ds-post-name\">Marco Fontana</span></div></article>",
+      "css": ".ds-post { padding: 20px; border: 1px solid var(--color-border, oklch(0.32 0.012 35)); border-radius: var(--radius-lg, 14px); background: var(--color-surface, oklch(0.176 0.006 35)); font-family: Archivo, ui-sans-serif, system-ui, sans-serif; transition: border-color .15s; } .ds-post:hover { border-color: var(--color-border-strong, oklch(0.42 0.016 35)); } .ds-post-pinned, .ds-post-pinned:hover { border-color: color-mix(in oklab, var(--color-accent, oklch(0.621 0.208 35)) 35%, transparent); } .ds-post-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; } .ds-post-pin { display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 600; color: var(--color-accent, oklch(0.621 0.208 35)); } .ds-post-time { font-size: 0.75rem; color: var(--color-ink-faint, oklch(0.6 0.01 40)); } .ds-post-title { margin: 0; font-weight: 800; font-size: 1.125rem; letter-spacing: -0.01em; color: var(--color-ink, oklch(0.971 0.003 60)); } .ds-post-body { margin: 8px 0 0; font-size: 0.875rem; line-height: 1.6; color: var(--color-ink-muted, oklch(0.748 0.008 45)); } .ds-post-author { display: flex; align-items: center; gap: 8px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--color-border, oklch(0.32 0.012 35)); } .ds-post-avatar { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 9999px; background: var(--color-accent, oklch(0.621 0.208 35)); color: #fff; font-size: 0.62rem; font-weight: 600; } .ds-post-name { font-size: 0.75rem; color: var(--color-ink-muted, oklch(0.748 0.008 45)); }"
+    },
+    {
+      "name": "Member Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Directory tile. Avatar + status top row, name that turns Orbit Red on hover, role badge, then sector/city meta. Whole card is a link; hover lifts the tone to surface-2.",
+      "html": "<a class=\"ds-member\" href=\"#\"><div class=\"ds-member-top\"><span class=\"ds-member-avatar\">LB</span><span class=\"ds-badge-status\"><span class=\"ds-dot\"></span>Attivo</span></div><h3 class=\"ds-member-name\">Luca Bianchi</h3><div class=\"ds-member-role\">Membro</div><dl class=\"ds-member-meta\"><div><svg viewBox=\"0 0 24 24\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"7\" width=\"20\" height=\"14\" rx=\"2\"/><path d=\"M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16\"/></svg><span>Finanza</span></div><div><svg viewBox=\"0 0 24 24\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z\"/><circle cx=\"12\" cy=\"10\" r=\"3\"/></svg><span>Milano</span></div></dl></a>",
+      "css": ".ds-member { display: flex; flex-direction: column; padding: 20px; border: 1px solid var(--color-border, oklch(0.32 0.012 35)); border-radius: var(--radius-lg, 14px); background: var(--color-surface, oklch(0.176 0.006 35)); font-family: Archivo, ui-sans-serif, system-ui, sans-serif; text-decoration: none; transition: border-color .2s, background .2s; } .ds-member:hover { border-color: var(--color-border-strong, oklch(0.42 0.016 35)); background: var(--color-surface-2, oklch(0.214 0.008 35)); } .ds-member-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; } .ds-member-avatar { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 9999px; background: var(--color-accent, oklch(0.621 0.208 35)); color: #fff; font-weight: 600; font-size: 1.05rem; } .ds-member-name { margin: 16px 0 0; font-weight: 800; font-size: 1.125rem; line-height: 1.15; letter-spacing: -0.01em; color: var(--color-ink, oklch(0.971 0.003 60)); transition: color .2s; } .ds-member:hover .ds-member-name { color: var(--color-accent, oklch(0.621 0.208 35)); } .ds-member-role { margin-top: 4px; display: inline-flex; align-items: center; padding: 2px 10px; border: 1px solid var(--color-border, oklch(0.32 0.012 35)); border-radius: 9999px; font-size: 0.75rem; font-weight: 600; color: var(--color-ink-muted, oklch(0.748 0.008 45)); align-self: flex-start; } .ds-member-meta { display: flex; flex-direction: column; gap: 6px; margin: 16px 0 0; font-size: 0.875rem; color: var(--color-ink-muted, oklch(0.748 0.008 45)); } .ds-member-meta div { display: flex; align-items: center; gap: 8px; } .ds-member-meta svg { color: var(--color-ink-faint, oklch(0.6 0.01 40)); flex-shrink: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Private Observatory",
+    "overview": "Orbitae is a dark sky with the network suspended in it. You enter a near-black canvas and the members are bodies in orbit around the central mark — the whole product is built to make you feel you are looking at something rare, from a quiet and privileged vantage point. The instrument is precise; the mood is composed. There is no clutter between you and the constellation of people you came to see. The system is restrained by conviction, not by timidity. A single decisive red — Orbit Red — is the only chromatic voice, spent sparingly: the mark, the active state, the primary action, a hovered member's glow. Everything else is a graphite-to-white grayscale, tinted a hair warm toward the red's own hue so the darkness reads as intentional rather than default. Surfaces are flat and layered by tone, never by heavy shadow. Space is generous. Motion is slow and orbital, honored down to a static layout when a member prefers reduced motion.",
+    "keyCharacteristics": [
+      "Near-black canvas (#0a0a0a) with warm-tinted tonal surface layering.",
+      "One accent — Orbit Red — used on ≤10% of any screen.",
+      "Bold grotesque display (Archivo 800) against calm, readable body text.",
+      "Flat surfaces; depth is tonal, and the red glow is the only 'elevation.'",
+      "Considered orbital motion, fully reduced-motion aware."
+    ],
+    "rules": [
+      { "name": "The One Voice Rule", "body": "Orbit Red appears on no more than ~10% of any screen. Its rarity is the entire point — the moment red becomes common, the observatory becomes a dashboard.", "section": "colors" },
+      { "name": "The Warm-Graphite Rule", "body": "Neutrals are never pure gray. Every surface and ink tone carries a trace of chroma toward the red's hue (35-60). The darkness is a warmed graphite, tuned to the brand.", "section": "colors" },
+      { "name": "The Tracking Floor Rule", "body": "Display tracking never goes below -0.02em. The letters stay open; 'designed' is not the same as 'cramped.'", "section": "typography" },
+      { "name": "The One Family Rule", "body": "Archivo carries the whole system through weight, not through a second typeface. Do not introduce a serif or a mono for contrast.", "section": "typography" },
+      { "name": "The Glow-Not-Shadow Rule", "body": "Depth is tone; emphasis is the red glow. If an element needs to feel raised, it earns Orbit Red light, not a gray drop shadow. A gray box-shadow on a card is prohibited.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep Orbit Red to ≤10% of any screen — the mark, the active state, the primary action, a hovered member.",
+      "Do convey depth with tone (void → surface → surface-2 → elevated) and emphasis with the Orbit Red glow, never a gray drop shadow.",
+      "Do warm every neutral a trace toward hue 35-60; keep the darkness intentional, not a cool default black.",
+      "Do carry status as dot and label together, so meaning never depends on color alone (WCAG AA).",
+      "Do honor prefers-reduced-motion everywhere — the orbit and any future motion must have a static, fully-legible fallback.",
+      "Do hold body text to ≥4.5:1; watch ink-faint placeholders and ink-muted on surface."
+    ],
+    "donts": [
+      "Don't build the generic SaaS dashboard: no big-number hero-metric template, no endless identical icon+heading+text card grids, no Linear/Notion chrome.",
+      "Don't drift into the corporate intranet: nothing gray, cluttered, or form-heavy for its own sake.",
+      "Don't reach for crypto/web3 'exclusive club' hype: no neon gradients, no glassmorphism as decoration, no gold-foil token theatrics.",
+      "Don't add loud consumer-social energy: no gamified notification badges, no emoji-feed styling.",
+      "Don't put a colored border-left/border-right stripe on cards, list items, or alerts — use full hairline borders or soft tinted fills.",
+      "Don't apply a gray box-shadow to a card, or over-round it; cards live at 14-18px, never 24px+.",
+      "Don't tighten display tracking past -0.02em, and don't introduce a second typeface — Archivo carries the system through weight alone."
+    ]
+  }
+}
