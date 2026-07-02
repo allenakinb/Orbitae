@@ -15,6 +15,12 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
+// Shared icon frame: a fixed box keeps every row aligned, and the active
+// item lights its icon in an accent-soft chip — the same chip language as the
+// stat tiles and document rows. One accent signal, no SaaS rail, no red wash.
+const ICON_BOX =
+  "grid h-9 w-9 shrink-0 place-items-center rounded-[var(--radius)] transition-colors";
+
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
@@ -23,17 +29,17 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const items = NAV.filter((i) => !i.perm || can(user.role, i.perm));
 
   return (
-    <div className="flex h-full flex-col gap-2 p-4">
+    <div className="flex h-full flex-col p-4">
       <Link
         href="/"
         onClick={onNavigate}
-        className="mb-4 flex items-center px-2 py-1"
+        className="mb-3 flex items-center border-b border-border px-2 pb-4"
         aria-label="Orbitae — Home"
       >
         <Logo markSize={32} />
       </Link>
 
-      <nav className="flex flex-1 flex-col gap-1">
+      <nav className="flex flex-1 flex-col gap-0.5">
         {items.map((item) => {
           const active = isActive(pathname, item.href);
           const Icon = item.icon;
@@ -42,10 +48,12 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             return (
               <span
                 key={item.href}
-                className="flex cursor-not-allowed items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-sm text-ink-faint"
+                className="flex cursor-not-allowed items-center gap-3 rounded-[var(--radius)] px-2 py-1.5 text-sm font-medium text-ink-faint"
                 aria-disabled
               >
-                <Icon size={18} strokeWidth={2} />
+                <span className={cn(ICON_BOX, "text-ink-faint")}>
+                  <Icon size={18} strokeWidth={2} />
+                </span>
                 <span>{item.label}</span>
                 <span className="ml-auto rounded-full bg-surface-2 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-ink-faint">
                   Presto
@@ -61,38 +69,35 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               onClick={onNavigate}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "group relative flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-sm font-medium transition-colors duration-150",
+                "group flex items-center gap-3 rounded-[var(--radius)] px-2 py-1.5 text-sm transition-colors duration-150",
                 active
-                  ? "bg-accent-soft text-ink"
-                  : "text-ink-muted hover:bg-surface-2 hover:text-ink",
+                  ? "font-semibold text-ink"
+                  : "font-medium text-ink-muted hover:bg-surface-2/60 hover:text-ink",
               )}
             >
               <span
                 className={cn(
-                  "absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-accent transition-opacity",
-                  active ? "opacity-100" : "opacity-0",
+                  ICON_BOX,
+                  active
+                    ? "bg-accent-soft text-accent"
+                    : "text-ink-faint group-hover:text-ink",
                 )}
-              />
-              <Icon
-                size={18}
-                strokeWidth={2}
-                className={cn(
-                  active ? "text-accent" : "text-ink-faint group-hover:text-ink",
-                )}
-              />
-              <span>{item.label}</span>
+              >
+                <Icon size={18} strokeWidth={2} />
+              </span>
+              <span className="tracking-[0.01em]">{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="mt-auto rounded-[var(--radius-lg)] border border-border bg-surface p-3">
+      <div className="mt-auto border-t border-border pt-3">
         <Link
           href="/membri"
           onClick={onNavigate}
-          className="flex items-center gap-3"
+          className="flex items-center gap-3 rounded-[var(--radius)] px-2 py-2 transition-colors hover:bg-surface-2/60"
         >
-          <Avatar profile={user} size={38} />
+          <Avatar profile={user} size={36} />
           <span className="min-w-0">
             <span className="block truncate text-sm font-semibold text-ink">
               {user.name}
@@ -107,9 +112,11 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             onNavigate?.();
             logout();
           }}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-[var(--radius)] border border-border px-3 py-2 text-sm font-medium text-ink-muted transition-colors hover:border-border-strong hover:text-ink"
+          className="mt-0.5 flex w-full items-center gap-3 rounded-[var(--radius)] px-2 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-2/60 hover:text-ink"
         >
-          <LogOut size={15} />
+          <span className={cn(ICON_BOX, "text-ink-faint")}>
+            <LogOut size={17} />
+          </span>
           Esci
         </button>
       </div>

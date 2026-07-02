@@ -43,7 +43,14 @@ export function Avatar({ profile, size = 44, className, ring }: AvatarProps) {
           className="h-full w-full object-cover"
         />
       ) : (
-        <span style={{ letterSpacing: "0.01em" }}>{initials(profile.name)}</span>
+        <span
+          style={{
+            letterSpacing: "0.01em",
+            textShadow: "0 1px 2px rgba(0, 0, 0, 0.35)",
+          }}
+        >
+          {initials(profile.name)}
+        </span>
       )}
     </span>
   );

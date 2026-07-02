@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, CalendarDays, FileText, Megaphone, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
@@ -29,6 +30,11 @@ export default function HomePage() {
   const resources = useResources();
   const events = useUpcomingEvents();
 
+  // Compute the time-based greeting after mount to avoid an SSR/client
+  // hydration mismatch; "Bentornato" is a stable, time-neutral default.
+  const [greet, setGreet] = useState("Bentornato");
+  useEffect(() => setGreet(greeting()), []);
+
   const inOrbit = profiles.filter((p) => p.status !== "pending");
   const activeCount = profiles.filter((p) => p.status === "active").length;
   const byId = new Map(profiles.map((p) => [p.id, p]));
@@ -36,34 +42,43 @@ export default function HomePage() {
 
   return (
     <PageContainer wide>
-      {/* Welcome */}
-      <header className="text-center motion-safe:animate-fade-rise">
-        <p className="text-sm text-ink-muted">{greeting()},</p>
-        <h1 className="font-display text-3xl text-ink sm:text-4xl">
-          {firstName}
-        </h1>
-        <p className="mx-auto mt-3 max-w-md text-sm text-ink-muted">
-          Ecco la tua orbita. {inOrbit.length} membri compongono il network
-          Orbitae — passa sopra un avatar per scoprirli.
-        </p>
-      </header>
+      {/* Keyboard/AT: skip the orbit straight to the live feed */}
+      <a
+        href="#novita"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[var(--z-sticky)] focus:rounded-[var(--radius)] focus:border focus:border-border-strong focus:bg-elevated focus:px-3 focus:py-2 focus:text-sm focus:text-ink"
+      >
+        Salta al contenuto
+      </a>
 
-      {/* Orbit hero */}
-      <section className="my-6 sm:my-8" aria-label="I membri del network in orbita">
-        <OrbitSystem members={inOrbit} />
-      </section>
+      {/* First screen — orbit and the live feed share the fold */}
+      <div className="grid items-start gap-8 lg:grid-cols-[1fr_minmax(320px,380px)]">
+        <section
+          aria-label="I membri del network in orbita"
+          className="min-w-0 motion-safe:animate-fade-rise"
+        >
+          <header className="text-center">
+            <p className="text-sm text-ink-muted" suppressHydrationWarning>
+              {greet},
+            </p>
+            <h1 className="font-display text-3xl text-ink sm:text-4xl">
+              {firstName}
+            </h1>
+            <p className="mx-auto mt-2 max-w-md text-sm text-ink-muted">
+              La tua orbita — {inOrbit.length} membri nel network. Passa sopra
+              un avatar per scoprirli.
+            </p>
+          </header>
+          <div className="mx-auto mt-4 w-full max-w-[520px]">
+            <OrbitSystem members={inOrbit} />
+          </div>
+        </section>
 
-      {/* Quick stats */}
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat icon={Users} value={activeCount} label="Membri attivi" />
-        <Stat icon={CalendarDays} value={events.length} label="Prossimi eventi" />
-        <Stat icon={Megaphone} value={announcements.length} label="Annunci" />
-        <Stat icon={FileText} value={resources.length} label="Documenti" />
-      </section>
-
-      {/* Feed + events */}
-      <section className="mt-7 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-        <div>
+        {/* Live feed */}
+        <section
+          id="novita"
+          aria-label="Novità dalla bacheca"
+          className="min-w-0 scroll-mt-20 motion-safe:animate-fade-rise"
+        >
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-display text-lg text-ink">Dalla bacheca</h2>
             <Link
@@ -74,56 +89,72 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="flex flex-col gap-3">
-            {announcements.slice(0, 3).map((a) => (
-              <AnnouncementCard
-                key={a.id}
-                announcement={a}
-                author={byId.get(a.authorId)}
-                compact
-              />
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h2 className="mb-3 font-display text-lg text-ink">Prossimi eventi</h2>
-          <div className="rounded-[var(--radius-lg)] border border-border bg-surface">
-            {events.length === 0 ? (
-              <p className="p-5 text-sm text-ink-muted">
-                Nessun evento in programma.
-              </p>
+            {announcements.length === 0 ? (
+              <div className="rounded-[var(--radius-lg)] border border-dashed border-border bg-surface/50 p-6 text-center">
+                <p className="text-sm text-ink-muted">Ancora nessun annuncio.</p>
+                <p className="mt-1 text-xs text-ink-faint">
+                  Le comunicazioni del club appariranno qui.
+                </p>
+              </div>
             ) : (
-              <ul>
-                {events.map((e, i) => (
-                  <li
-                    key={e.id}
-                    className={
-                      i > 0 ? "border-t border-border" : undefined
-                    }
-                  >
-                    <div className="flex items-center gap-4 p-4">
-                      <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-[var(--radius)] bg-accent-soft text-accent">
-                        <span className="text-sm font-bold leading-none">
-                          {formatDayMonth(e.date).split(" ")[0]}
-                        </span>
-                        <span className="text-[0.62rem] uppercase leading-none mt-0.5">
-                          {formatDayMonth(e.date).split(" ")[1]}
-                        </span>
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-ink">
-                          {e.title}
-                        </p>
-                        <p className="truncate text-xs text-ink-muted">
-                          {e.location}
-                        </p>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              announcements.slice(0, 3).map((a) => (
+                <AnnouncementCard
+                  key={a.id}
+                  announcement={a}
+                  author={byId.get(a.authorId)}
+                  compact
+                />
+              ))
             )}
           </div>
+        </section>
+      </div>
+
+      {/* Quick stats — each links to its section */}
+      <section className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Stat icon={Users} value={activeCount} label="Membri attivi" href="/membri" />
+        <Stat icon={CalendarDays} value={events.length} label="Prossimi eventi" href="#eventi" />
+        <Stat icon={Megaphone} value={announcements.length} label="Annunci" href="/bacheca" />
+        <Stat icon={FileText} value={resources.length} label="Documenti" href="/documenti" />
+      </section>
+
+      {/* Upcoming events */}
+      <section id="eventi" className="mt-8 scroll-mt-6">
+        <h2 className="mb-3 font-display text-lg text-ink">Prossimi eventi</h2>
+        <div className="rounded-[var(--radius-lg)] border border-border bg-surface">
+          {events.length === 0 ? (
+            <p className="p-5 text-sm text-ink-muted">
+              Nessun evento in programma.
+            </p>
+          ) : (
+            <ul>
+              {events.map((e, i) => (
+                <li
+                  key={e.id}
+                  className={i > 0 ? "border-t border-border" : undefined}
+                >
+                  <div className="flex items-center gap-4 p-4">
+                    <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-[var(--radius)] bg-accent-soft text-accent">
+                      <span className="text-sm font-bold leading-none">
+                        {formatDayMonth(e.date).split(" ")[0]}
+                      </span>
+                      <span className="text-[0.62rem] uppercase leading-none mt-0.5">
+                        {formatDayMonth(e.date).split(" ")[1]}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-ink">
+                        {e.title}
+                      </p>
+                      <p className="truncate text-xs text-ink-muted">
+                        {e.location}
+                      </p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </section>
     </PageContainer>

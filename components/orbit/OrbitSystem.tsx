@@ -125,8 +125,11 @@ export function OrbitSystem({ members }: { members: Profile[] }) {
                 key={member.id}
                 className="absolute"
                 style={{
-                  left: `calc(50% + ${x}%)`,
-                  top: `calc(50% + ${y}%)`,
+                  // Precompute the percentage (no calc()) at fixed precision:
+                  // the browser normalises inline calc() in the CSSOM, which
+                  // breaks hydration matching against React's raw string.
+                  left: `${(50 + x).toFixed(4)}%`,
+                  top: `${(50 + y).toFixed(4)}%`,
                   transform: "translate(-50%, -50%)",
                   zIndex: isHover ? 30 : 10,
                 }}
