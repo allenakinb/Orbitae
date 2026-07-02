@@ -25,7 +25,8 @@ export function MemberRow({ member }: { member: Profile }) {
           )}
         </span>
         <p className="mt-0.5 truncate text-sm text-ink-muted">
-          {member.sector} · {member.city}
+          {[member.sector, member.city].filter(Boolean).join(" · ") ||
+            member.bio}
         </p>
       </div>
       {member.role !== "member" && (

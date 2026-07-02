@@ -28,7 +28,8 @@ import type {
 // (see ./hooks.ts) so any mutation re-renders the relevant views.
 // ===================================================================
 
-const STORAGE_KEY = "orbitae:db:v1";
+// v2: reseeded with the real Orbitae contact list.
+const STORAGE_KEY = "orbitae:db:v2";
 
 interface DB {
   profiles: Profile[];

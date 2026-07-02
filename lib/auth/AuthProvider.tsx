@@ -26,7 +26,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 // Login disabled: every visit starts as the seeded admin, synchronously,
 // so the shell renders on the first paint (no loading flash).
-const DEFAULT_USER_ID = "u-marco";
+const DEFAULT_USER_ID = "u-lorenzo-scisciani";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userId, setUserId] = useState<string | null>(DEFAULT_USER_ID);

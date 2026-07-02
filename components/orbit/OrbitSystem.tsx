@@ -214,7 +214,9 @@ export function OrbitSystem({ members }: { members: Profile[] }) {
                         {member.name}
                       </span>
                       <span className="block text-[0.68rem] text-ink-muted">
-                        {ROLE_LABEL[member.role]} · {member.sector}
+                        {[ROLE_LABEL[member.role], member.sector || member.company]
+                          .filter(Boolean)
+                          .join(" · ")}
                       </span>
                     </span>
                   </button>
