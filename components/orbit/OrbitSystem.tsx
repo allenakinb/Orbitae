@@ -67,9 +67,10 @@ export function OrbitSystem({
     [members, active],
   );
 
-  // Keep the orbit still while a member is being inspected (hovered or a
-  // card is open) so avatars don't drift away from the pointer.
-  const paused = hovered !== null || active !== null;
+  // Pause the orbit only while the pointer is on an avatar, so it doesn't
+  // drift away mid-hover. As soon as you leave the orbit it resumes turning
+  // — the open card stays put (it's a fixed panel) and no longer freezes it.
+  const paused = hovered !== null;
 
   return (
     <div
