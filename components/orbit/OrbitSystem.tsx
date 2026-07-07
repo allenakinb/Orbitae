@@ -252,7 +252,10 @@ export function OrbitSystem({
       {activeMember && (
         <MemberOrbitCard
           member={activeMember}
+          onMouseEnter={cancelClose}
+          onMouseLeave={scheduleClose}
           onClose={() => {
+            cancelClose();
             setActive(null);
             setHovered(null);
           }}

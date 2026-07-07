@@ -40,9 +40,13 @@ function Row({
 export function MemberOrbitCard({
   member,
   onClose,
+  onMouseEnter,
+  onMouseLeave,
 }: {
   member: Profile;
   onClose: () => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }) {
   // Esc closes the card.
   useEffect(() => {
@@ -57,6 +61,8 @@ export function MemberOrbitCard({
     <div
       role="dialog"
       aria-label={`Scheda di ${member.name}`}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       className="pointer-events-auto fixed inset-x-4 bottom-4 z-[var(--z-drawer)] w-auto rounded-[var(--radius-lg)] border border-border bg-elevated p-5 shadow-2xl motion-safe:animate-fade-rise sm:left-auto sm:right-6 sm:top-1/2 sm:bottom-auto sm:w-[340px] sm:-translate-y-1/2"
     >
       <button
