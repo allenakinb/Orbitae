@@ -25,6 +25,7 @@ create table profiles (
   company     text,
   phone       text,
   bio         text,
+  linkedin    text,
   avatar_url  text,
   joined_at   date not null default current_date,
   created_at  timestamptz not null default now()
@@ -54,11 +55,13 @@ create table resources (
 
 -- events ------------------------------------------------------------
 create table events (
-  id         uuid primary key default gen_random_uuid(),
-  title      text not null,
-  date       date not null,
-  location   text not null default '',
-  created_at timestamptz not null default now()
+  id          uuid primary key default gen_random_uuid(),
+  title       text not null,
+  date        date not null,
+  location    text not null default '',
+  time        text,
+  description text,
+  created_at  timestamptz not null default now()
 );
 
 -- Helpers used by RLS policies (SECURITY DEFINER to read role safely).

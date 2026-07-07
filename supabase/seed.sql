@@ -7,10 +7,11 @@
 -- dataset lives in /lib/data/seed.ts and powers the in-app demo mode.
 -- ===================================================================
 
-insert into events (title, date, location) values
-  ('Cena di networking',          '2026-07-10', 'Palazzo Cordusio, Milano'),
-  ('Tavolo Internazionalizzazione','2026-07-24', 'Sede Orbitae, Milano'),
-  ('Assemblea semestrale',        '2026-09-18', 'Auditorium, Roma');
+-- La Home mostra solo il PROSSIMO evento (il primo per data). Aggiorna
+-- titolo/data/ora/luogo/descrizione con le info inviate su WhatsApp.
+insert into events (title, date, location, time, description) values
+  ('Come si costruisce il valore di un''azienda', '2026-07-10', 'Palazzo Cordusio, Milano', '20:00',
+   'Prossimo incontro del network. Dettagli e conferma presenza da definire.');
 
 -- Template — run once you have an auth user id for the member:
 --

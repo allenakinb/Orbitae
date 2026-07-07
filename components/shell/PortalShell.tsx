@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, PanelLeft, X } from "lucide-react";
+import { cn } from "@/lib/cn";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { Sidebar } from "./Sidebar";
 import { Logo } from "@/components/brand/Logo";
@@ -13,6 +14,9 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [drawer, setDrawer] = useState(false);
+  // Desktop-only: the sidebar can be collapsed to give the content the
+  // full width; a floating button at top-left brings it back.
+  const [collapsed, setCollapsed] = useState(false);
 
   // Route guard — bounce to login once the session is known to be empty.
   useEffect(() => {
@@ -44,11 +48,32 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[268px_1fr]">
+    <div
+      className={cn(
+        "min-h-dvh",
+        collapsed ? "lg:grid lg:grid-cols-[1fr]" : "lg:grid lg:grid-cols-[268px_1fr]",
+      )}
+    >
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-dvh border-r border-border bg-bg lg:block">
-        <Sidebar />
+      <aside
+        className={cn(
+          "sticky top-0 hidden h-dvh border-r border-border bg-bg",
+          !collapsed && "lg:block",
+        )}
+      >
+        <Sidebar onCollapse={() => setCollapsed(true)} />
       </aside>
+
+      {/* Desktop reopen button — top-left, shown when collapsed */}
+      {collapsed && (
+        <button
+          onClick={() => setCollapsed(false)}
+          aria-label="Apri il menu"
+          className="fixed left-4 top-4 z-[var(--z-sticky)] hidden rounded-[var(--radius)] border border-border bg-elevated/90 p-2 text-ink-muted shadow-lg backdrop-blur-md transition-colors hover:text-ink lg:block"
+        >
+          <PanelLeft size={20} />
+        </button>
+      )}
 
       {/* Mobile top bar */}
       <header className="sticky top-0 z-[var(--z-sticky)] flex items-center justify-between border-b border-border bg-bg/90 px-4 py-3 backdrop-blur-md lg:hidden">

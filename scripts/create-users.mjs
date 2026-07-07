@@ -183,6 +183,7 @@ async function provision() {
       city: "",
       company: m.company || null,
       bio: m.bio || null,
+      linkedin: m.linkedin || null,
       joined_at: m.joinedAt,
     });
     if (pErr) throw new Error(`profilo ${m.email}: ${pErr.message}`);

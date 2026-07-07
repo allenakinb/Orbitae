@@ -14,6 +14,7 @@ import {
   Phone,
   Trash2,
 } from "lucide-react";
+import { LinkedinIcon } from "@/components/brand/LinkedinIcon";
 import { useProfile } from "@/lib/data/hooks";
 import { repo } from "@/lib/data/store";
 import { Restricted } from "@/components/content/Restricted";
@@ -33,11 +34,13 @@ function InfoRow({
   label,
   value,
   href,
+  external,
 }: {
-  icon: typeof Mail;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
   label: string;
   value: string;
   href?: string;
+  external?: boolean;
 }) {
   const content = (
     <>
@@ -49,7 +52,13 @@ function InfoRow({
     </>
   );
   return href ? (
-    <a href={href} className="flex gap-3 transition-colors hover:text-accent">
+    <a
+      href={href}
+      className="flex gap-3 transition-colors hover:text-accent"
+      {...(external
+        ? { target: "_blank", rel: "noopener noreferrer" }
+        : {})}
+    >
       {content}
     </a>
   ) : (
@@ -159,6 +168,15 @@ export default function MemberDetailPage() {
                 href={`tel:${profile.phone}`}
               />
             )}
+            {profile.linkedin && (
+              <InfoRow
+                icon={LinkedinIcon}
+                label="LinkedIn"
+                value="Profilo LinkedIn"
+                href={profile.linkedin}
+                external
+              />
+            )}
           </div>
         </div>
       )}
@@ -181,6 +199,7 @@ function EditForm({
     sector: profile.sector,
     city: profile.city,
     phone: profile.phone ?? "",
+    linkedin: profile.linkedin ?? "",
     bio: profile.bio ?? "",
     role: profile.role,
     status: profile.status,
@@ -210,6 +229,7 @@ function EditForm({
       sector: form.sector.trim(),
       city: form.city.trim(),
       phone: form.phone.trim() || undefined,
+      linkedin: form.linkedin.trim() || undefined,
       bio: form.bio.trim() || undefined,
       avatarUrl: avatar,
       ...(isAdmin
@@ -282,6 +302,15 @@ function EditForm({
             id="f-phone"
             value={form.phone}
             onChange={(e) => set("phone", e.target.value)}
+          />
+        </Field>
+        <Field label="LinkedIn" htmlFor="f-linkedin">
+          <Input
+            id="f-linkedin"
+            type="url"
+            placeholder="https://www.linkedin.com/in/…"
+            value={form.linkedin}
+            onChange={(e) => set("linkedin", e.target.value)}
           />
         </Field>
         {isAdmin && (

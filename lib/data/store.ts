@@ -48,6 +48,7 @@ interface ProfileRow {
   company: string | null;
   phone: string | null;
   bio: string | null;
+  linkedin: string | null;
   avatar_url: string | null;
   joined_at: string;
 }
@@ -64,6 +65,7 @@ function toProfile(r: ProfileRow): Profile {
     company: r.company ?? undefined,
     phone: r.phone ?? undefined,
     bio: r.bio ?? undefined,
+    linkedin: r.linkedin ?? undefined,
     avatarUrl: r.avatar_url,
     joinedAt: r.joined_at,
   };
@@ -82,6 +84,7 @@ function toProfileRow(patch: Partial<Profile>): Record<string, unknown> {
   if ("company" in patch) row.company = patch.company ?? null;
   if ("phone" in patch) row.phone = patch.phone ?? null;
   if ("bio" in patch) row.bio = patch.bio ?? null;
+  if ("linkedin" in patch) row.linkedin = patch.linkedin ?? null;
   if ("avatarUrl" in patch) row.avatar_url = patch.avatarUrl;
   return row;
 }

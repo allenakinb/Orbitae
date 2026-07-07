@@ -24,6 +24,7 @@ export interface Profile {
   bio?: string;
   phone?: string;
   company?: string;
+  linkedin?: string; // full LinkedIn profile URL
 }
 
 export interface Announcement {
@@ -51,6 +52,8 @@ export interface ClubEvent {
   title: string;
   date: string; // ISO date
   location: string;
+  time?: string; // e.g. "20:00"
+  description?: string;
 }
 
 // Shape returned to the UI for the authenticated session.

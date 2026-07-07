@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import type { Profile } from "@/lib/data/types";
 import { ROLE_LABEL } from "@/lib/auth/permissions";
 import { Avatar } from "@/components/ui/Avatar";
 import { OrbitMark } from "@/components/brand/OrbitMark";
+import { MemberOrbitCard } from "./MemberOrbitCard";
 
 interface RingDef {
   radius: number; // fraction of half-width (0–1)
@@ -51,21 +51,31 @@ function layout(members: Profile[]): { ring: RingDef; items: Placed[] }[] {
   return rings.filter((g) => g.items.length > 0);
 }
 
-export function OrbitSystem({ members }: { members: Profile[] }) {
-  const router = useRouter();
-  const [paused, setPaused] = useState(false);
+export function OrbitSystem({
+  members,
+  centerLabel,
+}: {
+  members: Profile[];
+  centerLabel?: string;
+}) {
   const [hovered, setHovered] = useState<string | null>(null);
+  const [active, setActive] = useState<string | null>(null);
 
   const groups = useMemo(() => layout(members), [members]);
+  const activeMember = useMemo(
+    () => members.find((m) => m.id === active) ?? null,
+    [members, active],
+  );
+
+  // Keep the orbit still while a member is being inspected (hovered or a
+  // card is open) so avatars don't drift away from the pointer.
+  const paused = hovered !== null || active !== null;
 
   return (
     <div
       className="relative mx-auto aspect-square w-full"
       style={{ maxWidth: "min(88vw, 620px)" }}
-      onMouseLeave={() => {
-        setPaused(false);
-        setHovered(null);
-      }}
+      onMouseLeave={() => setHovered(null)}
     >
       {/* Dotted orbit guides — echo the mark's dot-burst. Each ring drifts
           slowly (motion-safe); dots fade with distance from the core. */}
@@ -128,9 +138,21 @@ export function OrbitSystem({ members }: { members: Profile[] }) {
           size={150}
           density={1.15}
           spin
-          className="opacity-95 [width:clamp(110px,26vw,168px)] [height:clamp(110px,26vw,168px)]"
+          className={cn(
+            "[width:clamp(110px,26vw,168px)] [height:clamp(110px,26vw,168px)]",
+            centerLabel ? "opacity-60" : "opacity-95",
+          )}
         />
       </div>
+
+      {/* Event title at the core */}
+      {centerLabel && (
+        <div className="pointer-events-none absolute left-1/2 top-1/2 z-20 w-[min(52%,220px)] -translate-x-1/2 -translate-y-1/2 text-center">
+          <p className="font-display text-sm leading-snug text-ink [text-shadow:0_1px_10px_var(--color-bg),0_0_2px_var(--color-bg)] sm:text-base">
+            {centerLabel}
+          </p>
+        </div>
+      )}
 
       {/* Rotating rings of members */}
       {groups.map((g, gi) => (
@@ -179,16 +201,17 @@ export function OrbitSystem({ members }: { members: Profile[] }) {
                 >
                   <button
                     onMouseEnter={() => {
-                      setPaused(true);
                       setHovered(member.id);
+                      setActive(member.id);
                     }}
                     onFocus={() => {
-                      setPaused(true);
                       setHovered(member.id);
+                      setActive(member.id);
                     }}
                     onBlur={() => setHovered(null)}
-                    onClick={() => router.push(`/membri/${member.id}`)}
+                    onClick={() => setActive(member.id)}
                     aria-label={`${member.name} — ${ROLE_LABEL[member.role]}`}
+                    aria-haspopup="dialog"
                     className="group pointer-events-auto relative block cursor-pointer rounded-full transition-transform duration-300 ease-[var(--ease-out-expo)] hover:scale-[1.16] focus-visible:scale-[1.16]"
                   >
                     <Avatar
@@ -201,24 +224,6 @@ export function OrbitSystem({ members }: { members: Profile[] }) {
                           "shadow-[0_0_0_3px_var(--color-bg),0_0_22px_-2px_var(--color-accent-glow)]",
                       )}
                     />
-                    {/* Hover label */}
-                    <span
-                      className={cn(
-                        "pointer-events-none absolute left-1/2 top-[calc(100%+8px)] z-40 -translate-x-1/2 whitespace-nowrap rounded-[var(--radius)] border border-border bg-elevated px-2.5 py-1.5 text-center shadow-xl transition-all duration-200",
-                        isHover
-                          ? "translate-y-0 opacity-100"
-                          : "pointer-events-none translate-y-1 opacity-0",
-                      )}
-                    >
-                      <span className="block text-xs font-semibold text-ink">
-                        {member.name}
-                      </span>
-                      <span className="block text-[0.68rem] text-ink-muted">
-                        {[ROLE_LABEL[member.role], member.sector || member.company]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </span>
-                    </span>
                   </button>
                 </div>
               </div>
@@ -226,6 +231,16 @@ export function OrbitSystem({ members }: { members: Profile[] }) {
           })}
         </div>
       ))}
+
+      {activeMember && (
+        <MemberOrbitCard
+          member={activeMember}
+          onClose={() => {
+            setActive(null);
+            setHovered(null);
+          }}
+        />
+      )}
     </div>
   );
 }

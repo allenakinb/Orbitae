@@ -2,8 +2,6 @@ import {
   LayoutGrid,
   Users,
   Megaphone,
-  FolderClosed,
-  MessagesSquare,
   ShieldCheck,
   UserRound,
   type LucideIcon,
@@ -22,8 +20,6 @@ export const NAV: NavItem[] = [
   { label: "Home", href: "/", icon: LayoutGrid },
   { label: "Membri", href: "/membri", icon: Users, perm: "viewMembers" },
   { label: "Bacheca", href: "/bacheca", icon: Megaphone },
-  { label: "Documenti", href: "/documenti", icon: FolderClosed },
-  { label: "Forum", href: "/forum", icon: MessagesSquare, soon: true },
   { label: "Account", href: "/account", icon: UserRound },
   { label: "Admin", href: "/admin", icon: ShieldCheck, perm: "viewAdmin" },
 ];

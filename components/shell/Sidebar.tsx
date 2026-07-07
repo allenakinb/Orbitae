@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { LogOut, PanelLeftClose } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { NAV } from "@/lib/nav";
 import { can, ROLE_LABEL } from "@/lib/auth/permissions";
@@ -21,7 +21,13 @@ function isActive(pathname: string, href: string) {
 const ICON_BOX =
   "grid h-9 w-9 shrink-0 place-items-center rounded-[var(--radius)] transition-colors";
 
-export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+export function Sidebar({
+  onNavigate,
+  onCollapse,
+}: {
+  onNavigate?: () => void;
+  onCollapse?: () => void;
+}) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   if (!user) return null;
@@ -30,14 +36,25 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex h-full flex-col p-4">
-      <Link
-        href="/"
-        onClick={onNavigate}
-        className="mb-3 flex items-center border-b border-border px-2 pb-4"
-        aria-label="Orbitae — Home"
-      >
-        <Logo markSize={32} />
-      </Link>
+      <div className="mb-3 flex items-center justify-between gap-2 border-b border-border px-2 pb-4">
+        <Link
+          href="/"
+          onClick={onNavigate}
+          className="flex items-center"
+          aria-label="Orbitae — Home"
+        >
+          <Logo markSize={32} />
+        </Link>
+        {onCollapse && (
+          <button
+            onClick={onCollapse}
+            aria-label="Chiudi il menu"
+            className="rounded-[var(--radius)] p-1.5 text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
+          >
+            <PanelLeftClose size={18} />
+          </button>
+        )}
+      </div>
 
       <nav className="flex flex-1 flex-col gap-1">
         {items.map((item) => {
