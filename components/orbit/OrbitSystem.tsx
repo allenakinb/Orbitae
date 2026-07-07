@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import type { Profile } from "@/lib/data/types";
 import { ROLE_LABEL } from "@/lib/auth/permissions";
@@ -60,6 +60,10 @@ export function OrbitSystem({
 }) {
   const [hovered, setHovered] = useState<string | null>(null);
   const [active, setActive] = useState<string | null>(null);
+  // Deferred close: leaving the orbit schedules the card to close, but
+  // moving straight onto the card cancels it — so its email/LinkedIn stay
+  // clickable while a stray exit still dismisses it.
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const groups = useMemo(() => layout(members), [members]);
   const activeMember = useMemo(
@@ -68,15 +72,33 @@ export function OrbitSystem({
   );
 
   // Pause the orbit only while the pointer is on an avatar, so it doesn't
-  // drift away mid-hover. As soon as you leave the orbit it resumes turning
-  // — the open card stays put (it's a fixed panel) and no longer freezes it.
+  // drift away mid-hover. As soon as you leave the orbit it resumes turning.
   const paused = hovered !== null;
+
+  function cancelClose() {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  }
+  function scheduleClose() {
+    cancelClose();
+    closeTimer.current = setTimeout(() => setActive(null), 140);
+  }
+  function open(id: string) {
+    cancelClose();
+    setHovered(id);
+    setActive(id);
+  }
 
   return (
     <div
       className="relative mx-auto aspect-square w-full"
       style={{ maxWidth: "min(88vw, 620px)" }}
-      onMouseLeave={() => setHovered(null)}
+      onMouseLeave={() => {
+        setHovered(null);
+        scheduleClose();
+      }}
     >
       {/* Dotted orbit guides — echo the mark's dot-burst. Each ring drifts
           slowly (motion-safe); dots fade with distance from the core. */}
@@ -201,16 +223,10 @@ export function OrbitSystem({
                   }
                 >
                   <button
-                    onMouseEnter={() => {
-                      setHovered(member.id);
-                      setActive(member.id);
-                    }}
-                    onFocus={() => {
-                      setHovered(member.id);
-                      setActive(member.id);
-                    }}
+                    onMouseEnter={() => open(member.id)}
+                    onFocus={() => open(member.id)}
                     onBlur={() => setHovered(null)}
-                    onClick={() => setActive(member.id)}
+                    onClick={() => open(member.id)}
                     aria-label={`${member.name} — ${ROLE_LABEL[member.role]}`}
                     aria-haspopup="dialog"
                     className="group pointer-events-auto relative block cursor-pointer rounded-full transition-transform duration-300 ease-[var(--ease-out-expo)] hover:scale-[1.16] focus-visible:scale-[1.16]"
