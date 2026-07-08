@@ -60,7 +60,7 @@ export default function HomePage() {
             {firstName}
           </h1>
           <p className="mx-auto mt-2 max-w-md text-sm text-ink-muted">
-            La tua orbita — {inOrbit.length} membri nel network. Passa sopra
+            La tua orbita, {inOrbit.length} membri nel network. Passa sopra
             un avatar per scoprirli.
           </p>
         </header>
