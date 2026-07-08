@@ -171,7 +171,7 @@ export function OrbitSystem({
       {/* Event title at the core */}
       {centerLabel && (
         <div className="pointer-events-none absolute left-1/2 top-1/2 z-20 w-[min(52%,220px)] -translate-x-1/2 -translate-y-1/2 text-center">
-          <p className="font-display text-sm leading-snug text-ink [text-shadow:0_1px_10px_var(--color-bg),0_0_2px_var(--color-bg)] sm:text-base">
+          <p className="font-display text-base font-semibold leading-snug text-ink [text-shadow:0_1px_10px_var(--color-bg),0_0_2px_var(--color-bg)] sm:text-lg">
             {centerLabel}
           </p>
         </div>

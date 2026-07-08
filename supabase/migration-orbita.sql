@@ -38,7 +38,7 @@ update public.profiles set linkedin = 'https://www.linkedin.com/in/rocco-lanzave
 delete from public.events;
 insert into public.events (title, date, location, time, description) values
   ('Come si costruisce il valore di un''azienda',
-   '2026-07-10',                       -- data (YYYY-MM-DD)
+   '2026-07-08',                       -- data (YYYY-MM-DD)
    'Palazzo Cordusio, Milano',         -- luogo
    '20:00',                            -- ora
    'Descrizione dell''evento (da WhatsApp).');

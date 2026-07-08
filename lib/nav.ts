@@ -1,7 +1,6 @@
 import {
   LayoutGrid,
   Users,
-  Megaphone,
   ShieldCheck,
   UserRound,
   type LucideIcon,
@@ -19,7 +18,6 @@ export interface NavItem {
 export const NAV: NavItem[] = [
   { label: "Home", href: "/", icon: LayoutGrid },
   { label: "Membri", href: "/membri", icon: Users, perm: "viewMembers" },
-  { label: "Bacheca", href: "/bacheca", icon: Megaphone },
   { label: "Account", href: "/account", icon: UserRound },
   { label: "Admin", href: "/admin", icon: ShieldCheck, perm: "viewAdmin" },
 ];
