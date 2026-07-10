@@ -142,10 +142,12 @@ export function OrbitSystem({
         ))}
       </svg>
 
-      {/* Luminous core — the mark reads as a lit body at the centre */}
+      {/* Luminous core — the mark reads as a lit body at the centre.
+          Centred with inset-0 + m-auto (not translate) so the pulse
+          animation's transform can never knock it off-centre. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full motion-safe:animate-[orbit-pulse_6s_ease-in-out_infinite]"
+        className="pointer-events-none absolute inset-0 m-auto rounded-full motion-safe:animate-[orbit-pulse_6s_ease-in-out_infinite]"
         style={{
           width: "clamp(220px, 46vw, 340px)",
           height: "clamp(220px, 46vw, 340px)",
@@ -155,8 +157,8 @@ export function OrbitSystem({
         }}
       />
 
-      {/* Central mark */}
-      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+      {/* Central mark — flex overlay centring, transform-free */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
         <OrbitMark
           size={150}
           density={1.15}
@@ -170,8 +172,8 @@ export function OrbitSystem({
 
       {/* Event title at the core */}
       {centerLabel && (
-        <div className="pointer-events-none absolute left-1/2 top-1/2 z-20 w-[min(52%,220px)] -translate-x-1/2 -translate-y-1/2 text-center">
-          <p className="font-display text-base font-semibold leading-snug text-ink [text-shadow:0_1px_10px_var(--color-bg),0_0_2px_var(--color-bg)] sm:text-lg">
+        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+          <p className="w-[min(52%,220px)] text-center font-display text-lg font-semibold leading-snug text-ink [text-shadow:0_1px_10px_var(--color-bg),0_0_2px_var(--color-bg)] sm:text-2xl">
             {centerLabel}
           </p>
         </div>

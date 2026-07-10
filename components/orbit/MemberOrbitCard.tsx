@@ -63,7 +63,7 @@ export function MemberOrbitCard({
       aria-label={`Scheda di ${member.name}`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      className="pointer-events-auto fixed inset-x-4 bottom-4 z-[var(--z-drawer)] w-auto rounded-[var(--radius-lg)] border border-border bg-elevated p-5 shadow-2xl motion-safe:animate-fade-rise sm:left-auto sm:right-6 sm:top-1/2 sm:bottom-auto sm:w-[340px] sm:-translate-y-1/2"
+      className="pointer-events-auto fixed inset-x-4 bottom-4 z-[var(--z-drawer)] w-auto rounded-[var(--radius-lg)] border border-border bg-elevated p-5 shadow-2xl motion-safe:animate-fade-rise sm:inset-y-0 sm:left-auto sm:right-6 sm:my-auto sm:h-fit sm:w-[340px]"
     >
       <button
         onClick={onClose}
