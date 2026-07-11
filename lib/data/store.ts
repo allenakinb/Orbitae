@@ -5,6 +5,7 @@ import type { AnnouncementInput, Repo, ResourceInput } from "./adapter";
 import type {
   Announcement,
   ClubEvent,
+  EventPerson,
   MemberStatus,
   Profile,
   Resource,
@@ -133,6 +134,36 @@ function toResource(r: ResourceRow): Resource {
   };
 }
 
+interface EventRow {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  date: string;
+  location: string;
+  time: string | null;
+  description: string | null;
+  summary: string | null;
+  speakers: EventPerson[] | null;
+  moderators: EventPerson[] | null;
+  map_url: string | null;
+}
+
+function toClubEvent(r: EventRow): ClubEvent {
+  return {
+    id: r.id,
+    title: r.title,
+    subtitle: r.subtitle ?? undefined,
+    date: r.date,
+    location: r.location,
+    time: r.time ?? undefined,
+    description: r.description ?? undefined,
+    summary: r.summary ?? undefined,
+    speakers: r.speakers ?? [],
+    moderators: r.moderators ?? [],
+    mapUrl: r.map_url ?? undefined,
+  };
+}
+
 // --- lifecycle ------------------------------------------------------
 
 // Fetches everything the portal shows in one round. Called after
@@ -153,7 +184,7 @@ export async function loadAll(): Promise<boolean> {
     profiles: (p.data as ProfileRow[]).map(toProfile),
     announcements: (a.data as AnnouncementRow[]).map(toAnnouncement),
     resources: (r.data as ResourceRow[]).map(toResource),
-    events: e.data as ClubEvent[],
+    events: (e.data as EventRow[]).map(toClubEvent),
   };
   emit();
   return true;

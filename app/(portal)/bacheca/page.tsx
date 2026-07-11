@@ -2,18 +2,24 @@
 
 import { useMemo, useState } from "react";
 import { Plus, X } from "lucide-react";
-import { useAnnouncements, useProfiles } from "@/lib/data/hooks";
+import {
+  useAnnouncements,
+  useProfiles,
+  useUpcomingEvents,
+} from "@/lib/data/hooks";
 import { repo } from "@/lib/data/store";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { can } from "@/lib/auth/permissions";
 import { PageContainer } from "@/components/shell/PageContainer";
 import { SectionTitle } from "@/components/ui/Card";
 import { AnnouncementCard } from "@/components/content/AnnouncementCard";
+import { EventCard } from "@/components/content/EventCard";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 
 export default function BachecaPage() {
   const announcements = useAnnouncements();
+  const events = useUpcomingEvents();
   const profiles = useProfiles();
   const { user } = useAuth();
   const mayPost = can(user?.role, "postAnnouncement");
@@ -44,7 +50,7 @@ export default function BachecaPage() {
     <PageContainer>
       <SectionTitle
         title="Bacheca"
-        subtitle="Annunci e comunicazioni ufficiali del club."
+        subtitle="Eventi, annunci e comunicazioni ufficiali del club."
       >
         {mayPost && !open && (
           <Button size="sm" onClick={() => setOpen(true)}>
@@ -100,15 +106,31 @@ export default function BachecaPage() {
         </form>
       )}
 
-      <div className="mt-6 flex flex-col gap-4">
-        {announcements.map((a) => (
-          <AnnouncementCard
-            key={a.id}
-            announcement={a}
-            author={byId.get(a.authorId)}
-          />
-        ))}
-      </div>
+      {events.length > 0 && (
+        <section aria-label="Prossimi eventi" className="mt-8">
+          <h2 className="mb-3 font-display text-lg text-ink">
+            Prossimi eventi
+          </h2>
+          <div className="flex flex-col gap-4">
+            {events.map((e) => (
+              <EventCard key={e.id} event={e} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section aria-label="Annunci" className="mt-10">
+        <h2 className="mb-3 font-display text-lg text-ink">Annunci</h2>
+        <div className="flex flex-col gap-4">
+          {announcements.map((a) => (
+            <AnnouncementCard
+              key={a.id}
+              announcement={a}
+              author={byId.get(a.authorId)}
+            />
+          ))}
+        </div>
+      </section>
     </PageContainer>
   );
 }

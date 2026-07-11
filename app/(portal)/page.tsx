@@ -126,6 +126,11 @@ export default function HomePage() {
                 <h3 className="font-display text-lg text-ink sm:text-xl">
                   {nextEvent.title}
                 </h3>
+                {nextEvent.subtitle && (
+                  <p className="mt-0.5 text-sm text-ink-muted">
+                    {nextEvent.subtitle}
+                  </p>
+                )}
                 <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-ink-muted">
                   <span className="inline-flex items-center gap-1.5">
                     <CalendarDays size={15} className="text-ink-faint" />
