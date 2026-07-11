@@ -60,6 +60,16 @@ create table if not exists events (
   created_at timestamptz not null default now()
 );
 
+-- Colonne eventi aggiunte dopo il primo setup (vedi migration-orbita.sql
+-- e migration-eventi.sql) — qui come alter idempotenti.
+alter table events add column if not exists time        text;
+alter table events add column if not exists description text;
+alter table events add column if not exists subtitle    text;
+alter table events add column if not exists speakers    jsonb not null default '[]'::jsonb;
+alter table events add column if not exists moderators  jsonb not null default '[]'::jsonb;
+alter table events add column if not exists summary     text;
+alter table events add column if not exists map_url     text;
+
 -- Funzioni helper per le RLS (create or replace = sempre sicuro) -----
 create or replace function public.current_role()
 returns member_role

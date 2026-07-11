@@ -47,13 +47,24 @@ export interface Resource {
   createdAt: string;
 }
 
+// Relatore o moderatore di un evento.
+export interface EventPerson {
+  name: string;
+  role?: string; // ruolo / azienda
+}
+
 export interface ClubEvent {
   id: string;
   title: string;
+  subtitle?: string;
   date: string; // ISO date
   location: string;
   time?: string; // e.g. "20:00"
-  description?: string;
+  description?: string; // blurb breve (card Home)
+  summary?: string; // sintesi estesa (Bacheca)
+  speakers: EventPerson[]; // relatori
+  moderators: EventPerson[]; // moderatori
+  mapUrl?: string; // link Google Maps
 }
 
 // Shape returned to the UI for the authenticated session.

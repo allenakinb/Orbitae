@@ -7,11 +7,12 @@
 -- dataset lives in /lib/data/seed.ts and powers the in-app demo mode.
 -- ===================================================================
 
--- La Home mostra solo il PROSSIMO evento (il primo per data). Aggiorna
--- titolo/data/ora/luogo/descrizione con le info inviate su WhatsApp.
-insert into events (title, date, location, time, description) values
-  ('Come si costruisce il valore di un''azienda', '2026-07-08', 'Palazzo Cordusio, Milano', '20:00',
-   'Prossimo incontro del network. Dettagli e conferma presenza da definire.');
+-- La Home mostra solo il PROSSIMO evento (il primo per data); la Bacheca
+-- li elenca tutti (futuri). speakers/moderators sono jsonb [{"name","role"?}].
+insert into events (title, subtitle, date, location, time, description, summary, speakers, moderators, map_url) values
+  ('Come si costruisce il valore di un''azienda', null, '2026-07-08', 'Palazzo Cordusio, Milano', '20:00',
+   'Prossimo incontro del network. Dettagli e conferma presenza da definire.',
+   null, '[]'::jsonb, '[]'::jsonb, null);
 
 -- Template — run once you have an auth user id for the member:
 --

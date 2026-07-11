@@ -57,10 +57,15 @@ create table resources (
 create table events (
   id          uuid primary key default gen_random_uuid(),
   title       text not null,
+  subtitle    text,
   date        date not null,
   location    text not null default '',
   time        text,
   description text,
+  summary     text,                                     -- sintesi estesa (Bacheca)
+  speakers    jsonb not null default '[]'::jsonb,       -- relatori: [{"name","role"?}]
+  moderators  jsonb not null default '[]'::jsonb,       -- moderatori: [{"name","role"?}]
+  map_url     text,                                     -- link Google Maps
   created_at  timestamptz not null default now()
 );
 
