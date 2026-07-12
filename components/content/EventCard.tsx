@@ -1,4 +1,4 @@
-import { CalendarDays, Clock, MapPin } from "lucide-react";
+import { CalendarDays, Clock, MapPin, Pencil, Trash2 } from "lucide-react";
 import type { ClubEvent, EventPerson } from "@/lib/data/types";
 import { formatDate, formatDayMonth } from "@/lib/format";
 
@@ -20,9 +20,18 @@ function PeopleGroup({ label, people }: { label: string; people: EventPerson[] }
   );
 }
 
-export function EventCard({ event }: { event: ClubEvent }) {
+export function EventCard({
+  event,
+  onEdit,
+  onDelete,
+}: {
+  event: ClubEvent;
+  onEdit?: (event: ClubEvent) => void;
+  onDelete?: (event: ClubEvent) => void;
+}) {
   const [day, month] = formatDayMonth(event.date).split(" ");
   const hasPeople = event.speakers.length > 0 || event.moderators.length > 0;
+  const canManage = !!onEdit || !!onDelete;
 
   return (
     <article className="rounded-[var(--radius-lg)] border border-border bg-surface p-5 transition-colors hover:border-border-strong sm:p-6">
@@ -34,9 +43,35 @@ export function EventCard({ event }: { event: ClubEvent }) {
           </span>
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="font-display text-lg text-ink sm:text-xl">
-            {event.title}
-          </h3>
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="font-display text-lg text-ink sm:text-xl">
+              {event.title}
+            </h3>
+            {canManage && (
+              <div className="flex shrink-0 items-center gap-1">
+                {onEdit && (
+                  <button
+                    type="button"
+                    onClick={() => onEdit(event)}
+                    aria-label="Modifica evento"
+                    className="rounded-[var(--radius)] p-1.5 text-ink-faint transition-colors hover:bg-surface-2 hover:text-ink"
+                  >
+                    <Pencil size={16} />
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    type="button"
+                    onClick={() => onDelete(event)}
+                    aria-label="Elimina evento"
+                    className="rounded-[var(--radius)] p-1.5 text-ink-faint transition-colors hover:bg-surface-2 hover:text-ink"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
           {event.subtitle && (
             <p className="mt-0.5 text-sm text-ink-muted">{event.subtitle}</p>
           )}

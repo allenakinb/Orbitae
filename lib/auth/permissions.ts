@@ -7,7 +7,8 @@ export type Permission =
   | "viewMembers" // browse the member directory
   | "manageMembers" // edit member data, change status/role
   | "postAnnouncement" // create/edit Bacheca posts
-  | "uploadResource"; // upload documents
+  | "uploadResource" // upload documents
+  | "manageEvents"; // create/edit/delete events
 
 const MATRIX: Record<Permission, Role[]> = {
   // Solo gli Admin vedono il pannello e la directory dei membri;
@@ -17,6 +18,7 @@ const MATRIX: Record<Permission, Role[]> = {
   manageMembers: ["admin"],
   postAnnouncement: ["admin", "staff"],
   uploadResource: ["admin", "staff"],
+  manageEvents: ["admin", "staff"],
 };
 
 export function can(role: Role | undefined, perm: Permission): boolean {

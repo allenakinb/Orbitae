@@ -1,7 +1,12 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
-import type { AnnouncementInput, Repo, ResourceInput } from "./adapter";
+import type {
+  AnnouncementInput,
+  EventInput,
+  Repo,
+  ResourceInput,
+} from "./adapter";
 import type {
   Announcement,
   ClubEvent,
@@ -164,6 +169,24 @@ function toClubEvent(r: EventRow): ClubEvent {
   };
 }
 
+// Only the keys present in the patch are sent (see toProfileRow above);
+// jsonb columns take arrays as-is, and `undefined` optional fields become
+// SQL null so clearing a field actually persists.
+function toEventRow(patch: Partial<ClubEvent>): Record<string, unknown> {
+  const row: Record<string, unknown> = {};
+  if ("title" in patch) row.title = patch.title;
+  if ("subtitle" in patch) row.subtitle = patch.subtitle ?? null;
+  if ("date" in patch) row.date = patch.date;
+  if ("time" in patch) row.time = patch.time ?? null;
+  if ("location" in patch) row.location = patch.location;
+  if ("description" in patch) row.description = patch.description ?? null;
+  if ("summary" in patch) row.summary = patch.summary ?? null;
+  if ("speakers" in patch) row.speakers = patch.speakers ?? [];
+  if ("moderators" in patch) row.moderators = patch.moderators ?? [];
+  if ("mapUrl" in patch) row.map_url = patch.mapUrl ?? null;
+  return row;
+}
+
 // --- lifecycle ------------------------------------------------------
 
 // Fetches everything the portal shows in one round. Called after
@@ -320,5 +343,48 @@ export const repo: Repo = {
     return [...db.events]
       .filter((e) => e.date >= today)
       .sort((a, b) => a.date.localeCompare(b.date));
+  },
+
+  createEvent(input: EventInput) {
+    const item: ClubEvent = {
+      id: crypto.randomUUID(),
+      title: input.title,
+      subtitle: input.subtitle,
+      date: input.date,
+      time: input.time,
+      location: input.location,
+      description: input.description,
+      summary: input.summary,
+      speakers: input.speakers ?? [],
+      moderators: input.moderators ?? [],
+      mapUrl: input.mapUrl,
+    };
+    db = { ...db, events: [...db.events, item] };
+    emit();
+    persistOrResync(
+      supabase.from("events").insert({ id: item.id, ...toEventRow(item) }),
+    );
+    return item;
+  },
+
+  updateEvent(id, patch) {
+    const prev = db.events.find((x) => x.id === id);
+    if (!prev) return undefined;
+    const next = { ...prev, ...patch };
+    db = {
+      ...db,
+      events: db.events.map((e) => (e.id === id ? next : e)),
+    };
+    emit();
+    persistOrResync(
+      supabase.from("events").update(toEventRow(patch)).eq("id", id),
+    );
+    return next;
+  },
+
+  deleteEvent(id) {
+    db = { ...db, events: db.events.filter((e) => e.id !== id) };
+    emit();
+    persistOrResync(supabase.from("events").delete().eq("id", id));
   },
 };

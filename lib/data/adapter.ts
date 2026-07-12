@@ -1,6 +1,7 @@
 import type {
   Announcement,
   ClubEvent,
+  EventPerson,
   MemberStatus,
   Profile,
   Resource,
@@ -32,6 +33,19 @@ export interface ResourceInput {
   uploadedBy: string;
 }
 
+export interface EventInput {
+  title: string;
+  subtitle?: string;
+  date: string; // ISO date (YYYY-MM-DD)
+  time?: string;
+  location: string;
+  description?: string;
+  summary?: string;
+  speakers: EventPerson[];
+  moderators: EventPerson[];
+  mapUrl?: string;
+}
+
 export interface Repo {
   listProfiles(): Profile[];
   getProfile(id: string): Profile | undefined;
@@ -46,4 +60,7 @@ export interface Repo {
   createResource(input: ResourceInput): Resource;
 
   listEvents(): ClubEvent[];
+  createEvent(input: EventInput): ClubEvent;
+  updateEvent(id: string, patch: Partial<EventInput>): ClubEvent | undefined;
+  deleteEvent(id: string): void;
 }
