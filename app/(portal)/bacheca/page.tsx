@@ -8,12 +8,15 @@ import {
   useUpcomingEvents,
 } from "@/lib/data/hooks";
 import { repo } from "@/lib/data/store";
+import type { EventInput } from "@/lib/data/adapter";
+import type { ClubEvent } from "@/lib/data/types";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { can } from "@/lib/auth/permissions";
 import { PageContainer } from "@/components/shell/PageContainer";
 import { SectionTitle } from "@/components/ui/Card";
 import { AnnouncementCard } from "@/components/content/AnnouncementCard";
 import { EventCard } from "@/components/content/EventCard";
+import { EventForm } from "@/components/content/EventForm";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 
@@ -23,10 +26,14 @@ export default function BachecaPage() {
   const profiles = useProfiles();
   const { user } = useAuth();
   const mayPost = can(user?.role, "postAnnouncement");
+  const mayManageEvents = can(user?.role, "manageEvents");
 
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+
+  // null = form chiuso · "new" = creazione · ClubEvent = modifica
+  const [eventDraft, setEventDraft] = useState<ClubEvent | "new" | null>(null);
 
   const byId = useMemo(
     () => new Map(profiles.map((p) => [p.id, p])),
@@ -44,6 +51,22 @@ export default function BachecaPage() {
     setTitle("");
     setBody("");
     setOpen(false);
+  }
+
+  function submitEvent(input: EventInput) {
+    if (eventDraft && eventDraft !== "new") {
+      repo.updateEvent(eventDraft.id, input);
+    } else {
+      repo.createEvent(input);
+    }
+    setEventDraft(null);
+  }
+
+  function removeEvent(ev: ClubEvent) {
+    if (window.confirm(`Eliminare l'evento «${ev.title}»?`)) {
+      repo.deleteEvent(ev.id);
+      if (eventDraft !== "new" && eventDraft?.id === ev.id) setEventDraft(null);
+    }
   }
 
   return (
@@ -106,16 +129,47 @@ export default function BachecaPage() {
         </form>
       )}
 
-      {events.length > 0 && (
+      {(events.length > 0 || mayManageEvents) && (
         <section aria-label="Prossimi eventi" className="mt-8">
-          <h2 className="mb-3 font-display text-lg text-ink">
-            Prossimi eventi
-          </h2>
-          <div className="flex flex-col gap-4">
-            {events.map((e) => (
-              <EventCard key={e.id} event={e} />
-            ))}
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="font-display text-lg text-ink">Prossimi eventi</h2>
+            {mayManageEvents && eventDraft === null && (
+              <Button size="sm" onClick={() => setEventDraft("new")}>
+                <Plus size={16} /> Nuovo evento
+              </Button>
+            )}
           </div>
+
+          {eventDraft !== null && (
+            <div className="mb-4">
+              <EventForm
+                key={eventDraft === "new" ? "new" : eventDraft.id}
+                event={eventDraft === "new" ? undefined : eventDraft}
+                onSubmit={submitEvent}
+                onCancel={() => setEventDraft(null)}
+              />
+            </div>
+          )}
+
+          {events.length > 0 ? (
+            <div className="flex flex-col gap-4">
+              {events.map((e) => (
+                <EventCard
+                  key={e.id}
+                  event={e}
+                  onEdit={mayManageEvents ? setEventDraft : undefined}
+                  onDelete={mayManageEvents ? removeEvent : undefined}
+                />
+              ))}
+            </div>
+          ) : (
+            mayManageEvents &&
+            eventDraft === null && (
+              <p className="text-sm text-ink-muted">
+                Nessun evento in programma. Crea il primo con «Nuovo evento».
+              </p>
+            )
+          )}
         </section>
       )}
 
