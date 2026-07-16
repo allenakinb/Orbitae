@@ -1,18 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Camera,
-  CalendarDays,
-  Check,
-  KeyRound,
-  Mail,
-  Trash2,
-} from "lucide-react";
+import { Camera, Check, KeyRound, Mail, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { repo } from "@/lib/data/store";
 import type { Profile } from "@/lib/data/types";
-import { formatDate } from "@/lib/format";
 import { resizeToDataUrl, ACCEPTED_IMAGE } from "@/lib/brand/image";
 import { PageContainer } from "@/components/shell/PageContainer";
 import { SectionTitle } from "@/components/ui/Card";
@@ -42,10 +34,6 @@ export default function AccountPage() {
           <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink-muted">
             <span className="inline-flex items-center gap-1.5">
               <Mail size={14} className="text-ink-faint" /> {user.email}
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <CalendarDays size={14} className="text-ink-faint" /> Iscritto dal{" "}
-              {formatDate(user.joinedAt)}
             </span>
           </div>
         </div>

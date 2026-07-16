@@ -8,7 +8,6 @@ import { repo } from "@/lib/data/store";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { can } from "@/lib/auth/permissions";
 import type { MemberStatus, Tier } from "@/lib/data/types";
-import { formatDate } from "@/lib/format";
 import { PageContainer } from "@/components/shell/PageContainer";
 import { Restricted } from "@/components/content/Restricted";
 import { SectionTitle } from "@/components/ui/Card";
@@ -81,9 +80,6 @@ export default function AdminPage() {
               <th className="hidden px-4 py-3 font-semibold md:table-cell">
                 Settore
               </th>
-              <th className="hidden px-4 py-3 font-semibold lg:table-cell">
-                Iscritto
-              </th>
               <th className="px-4 py-3 font-semibold">Stato</th>
             </tr>
           </thead>
@@ -140,9 +136,6 @@ export default function AdminPage() {
                 </td>
                 <td className="hidden px-4 py-3 text-ink-muted md:table-cell">
                   {m.sector}
-                </td>
-                <td className="hidden px-4 py-3 text-ink-muted lg:table-cell">
-                  {formatDate(m.joinedAt)}
                 </td>
                 <td className="px-4 py-3">
                   {mayManage ? (

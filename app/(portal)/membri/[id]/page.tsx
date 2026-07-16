@@ -7,7 +7,6 @@ import {
   ArrowLeft,
   Briefcase,
   Building2,
-  CalendarDays,
   Camera,
   Mail,
   MapPin,
@@ -20,7 +19,6 @@ import { repo } from "@/lib/data/store";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { can } from "@/lib/auth/permissions";
 import type { MemberStatus, Profile, Tier } from "@/lib/data/types";
-import { formatDate } from "@/lib/format";
 import { resizeToDataUrl, ACCEPTED_IMAGE } from "@/lib/brand/image";
 import { PageContainer } from "@/components/shell/PageContainer";
 import { Avatar } from "@/components/ui/Avatar";
@@ -141,11 +139,6 @@ export default function MemberDetailPage() {
             {profile.company && (
               <InfoRow icon={Building2} label="Azienda" value={profile.company} />
             )}
-            <InfoRow
-              icon={CalendarDays}
-              label="Iscritto dal"
-              value={formatDate(profile.joinedAt)}
-            />
             <InfoRow
               icon={Mail}
               label="Email"
