@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import type { Profile } from "@/lib/data/types";
 import { TIER_LABEL } from "@/lib/auth/permissions";
@@ -65,6 +65,23 @@ export function OrbitSystem({
   // clickable while a stray exit still dismisses it.
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Ring positions are percentages (already responsive) but avatar sizes are
+  // fixed px tuned for a ~620px system. On a phone the system is far narrower,
+  // so scale avatars in proportion to the real width — otherwise they overlap
+  // and spill past the edge. Desktop (≥620px) keeps full size.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(([entry]) => {
+      const w = entry.contentRect.width;
+      if (w) setScale(Math.min(1, Math.max(0.5, w / 620)));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const groups = useMemo(() => layout(members), [members]);
   const activeMember = useMemo(
     () => members.find((m) => m.id === active) ?? null,
@@ -93,6 +110,7 @@ export function OrbitSystem({
 
   return (
     <div
+      ref={rootRef}
       className="relative mx-auto aspect-square w-full"
       style={{ maxWidth: "min(88vw, 620px)" }}
       onMouseLeave={() => {
@@ -235,7 +253,7 @@ export function OrbitSystem({
                   >
                     <Avatar
                       profile={member}
-                      size={ring.avatar}
+                      size={Math.round(ring.avatar * scale)}
                       ring
                       className={cn(
                         "transition-shadow duration-300",
