@@ -17,15 +17,14 @@ import {
 import { LinkedinIcon } from "@/components/brand/LinkedinIcon";
 import { useProfile } from "@/lib/data/hooks";
 import { repo } from "@/lib/data/store";
-import { Restricted } from "@/components/content/Restricted";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { can } from "@/lib/auth/permissions";
-import type { MemberStatus, Profile, Role } from "@/lib/data/types";
+import type { MemberStatus, Profile, Tier } from "@/lib/data/types";
 import { formatDate } from "@/lib/format";
 import { resizeToDataUrl, ACCEPTED_IMAGE } from "@/lib/brand/image";
 import { PageContainer } from "@/components/shell/PageContainer";
 import { Avatar } from "@/components/ui/Avatar";
-import { RoleBadge, StatusBadge } from "@/components/ui/Badge";
+import { TierBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 
@@ -72,11 +71,6 @@ export default function MemberDetailPage() {
   const { user } = useAuth();
   const [editing, setEditing] = useState(false);
 
-  // I membri vedono solo il proprio profilo; la directory è di Admin/Staff.
-  if (!can(user?.role, "viewMembers") && user?.id !== params.id) {
-    return <Restricted />;
-  }
-
   if (!profile) {
     return (
       <PageContainer>
@@ -96,15 +90,14 @@ export default function MemberDetailPage() {
   const isAdmin = can(user?.role, "manageMembers");
   const isOwn = user?.id === profile.id;
   const canEdit = isAdmin || isOwn;
-  const mayViewDirectory = can(user?.role, "viewMembers");
 
   return (
     <PageContainer>
       <Link
-        href={mayViewDirectory ? "/membri" : "/account"}
+        href="/membri"
         className="inline-flex items-center gap-1.5 text-sm text-ink-muted transition-colors hover:text-ink"
       >
-        <ArrowLeft size={16} /> {mayViewDirectory ? "Directory" : "Account"}
+        <ArrowLeft size={16} /> Directory
       </Link>
 
       {editing ? (
@@ -122,8 +115,7 @@ export default function MemberDetailPage() {
             <div className="min-w-0 flex-1">
               <h1 className="font-display text-3xl text-ink">{profile.name}</h1>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <RoleBadge role={profile.role} />
-                <StatusBadge status={profile.status} />
+                <TierBadge tier={profile.tier} />
               </div>
               {profile.company && (
                 <p className="mt-3 text-sm text-ink-muted">{profile.company}</p>
@@ -201,7 +193,7 @@ function EditForm({
     phone: profile.phone ?? "",
     linkedin: profile.linkedin ?? "",
     bio: profile.bio ?? "",
-    role: profile.role,
+    tier: profile.tier,
     status: profile.status,
   });
   const [avatar, setAvatar] = useState<string | null>(profile.avatarUrl);
@@ -233,7 +225,7 @@ function EditForm({
       bio: form.bio.trim() || undefined,
       avatarUrl: avatar,
       ...(isAdmin
-        ? { role: form.role as Role, status: form.status as MemberStatus }
+        ? { tier: form.tier as Tier, status: form.status as MemberStatus }
         : {}),
     });
     onClose();
@@ -315,15 +307,15 @@ function EditForm({
         </Field>
         {isAdmin && (
           <>
-            <Field label="Ruolo" htmlFor="f-role">
+            <Field label="Etichetta" htmlFor="f-tier">
               <Select
-                id="f-role"
-                value={form.role}
-                onChange={(e) => set("role", e.target.value as Role)}
+                id="f-tier"
+                value={form.tier}
+                onChange={(e) => set("tier", e.target.value as Tier)}
               >
-                <option value="member">Membro</option>
-                <option value="staff">Staff</option>
-                <option value="admin">Admin</option>
+                <option value="founder">Founder</option>
+                <option value="ambassador">Ambassador</option>
+                <option value="member">Member</option>
               </Select>
             </Field>
             <Field label="Stato" htmlFor="f-status">

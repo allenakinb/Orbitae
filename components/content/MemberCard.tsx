@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Profile } from "@/lib/data/types";
 import { Avatar } from "@/components/ui/Avatar";
-import { RoleBadge, StatusBadge } from "@/components/ui/Badge";
+import { TierBadge } from "@/components/ui/Badge";
 
 // A register row, not a card: the directory reads as the club's member
 // roster — typographic hierarchy and hairline rules instead of a grid of
@@ -29,12 +29,9 @@ export function MemberRow({ member }: { member: Profile }) {
             member.bio}
         </p>
       </div>
-      {member.role !== "member" && (
-        <span className="hidden sm:block">
-          <RoleBadge role={member.role} />
-        </span>
-      )}
-      <StatusBadge status={member.status} />
+      {/* Founder e Ambassador si distinguono; trenta chip "Member"
+          identiche non direbbero nulla. */}
+      {member.tier !== "member" && <TierBadge tier={member.tier} />}
     </Link>
   );
 }

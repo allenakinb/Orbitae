@@ -6,7 +6,11 @@
 -- ===================================================================
 
 -- Enums (crea solo se non esistono) --------------------------------
+-- 'staff' è un residuo storico: nessuna riga lo usa più (l'accesso è
+-- admin o niente), ma rimuoverlo imporrebbe di ricreare tipo e colonna.
 do $$ begin create type member_role as enum ('admin','staff','member');
+  exception when duplicate_object then null; end $$;
+do $$ begin create type member_tier as enum ('founder','ambassador','member');
   exception when duplicate_object then null; end $$;
 do $$ begin create type member_status as enum ('active','suspended','expired','pending');
   exception when duplicate_object then null; end $$;
@@ -60,8 +64,16 @@ create table if not exists events (
   created_at timestamptz not null default now()
 );
 
--- Colonne eventi aggiunte dopo il primo setup (vedi migration-orbita.sql
--- e migration-eventi.sql) — qui come alter idempotenti.
+create table if not exists event_attendees (
+  event_id   uuid not null references events (id)   on delete cascade,
+  profile_id uuid not null references profiles (id) on delete cascade,
+  primary key (event_id, profile_id)
+);
+
+-- Colonne aggiunte dopo il primo setup (vedi le migration in questa
+-- cartella) — qui come alter idempotenti.
+alter table profiles add column if not exists linkedin text;
+alter table profiles add column if not exists tier member_tier not null default 'member';
 alter table events add column if not exists time        text;
 alter table events add column if not exists description text;
 alter table events add column if not exists subtitle    text;
@@ -77,28 +89,34 @@ language sql stable security definer set search_path = public as $$
   select role from profiles where id = auth.uid();
 $$;
 
-create or replace function public.is_staff_or_admin()
-returns boolean
-language sql stable security definer set search_path = public as $$
-  select coalesce(public.current_role() in ('admin','staff'), false);
-$$;
-
 create or replace function public.is_admin()
 returns boolean
 language sql stable security definer set search_path = public as $$
   select coalesce(public.current_role() = 'admin', false);
 $$;
 
+-- Storico: le policy scritte quando esisteva lo staff passano di qui.
+-- Oggi scrive solo chi è admin; la funzione resta per non dover riscrivere
+-- ogni policy che la referenzia (comprese quelle di storage, più sotto).
+create or replace function public.is_staff_or_admin()
+returns boolean
+language sql stable security definer set search_path = public as $$
+  select public.is_admin();
+$$;
+
 -- Indici ------------------------------------------------------------
 create index if not exists announcements_created_idx on announcements (created_at desc);
 create index if not exists resources_cat_created_idx on resources (category, created_at desc);
 create index if not exists events_date_idx on events (date);
+create index if not exists event_attendees_event_idx on event_attendees (event_id);
 
 -- ============ RLS ============
-alter table profiles      enable row level security;
-alter table announcements enable row level security;
-alter table resources     enable row level security;
-alter table events        enable row level security;
+-- Tutti leggono tutto; scrivono solo i tre admin.
+alter table profiles        enable row level security;
+alter table announcements   enable row level security;
+alter table resources       enable row level security;
+alter table events          enable row level security;
+alter table event_attendees enable row level security;
 
 -- profiles
 drop policy if exists "profiles: read for members" on profiles;
@@ -117,31 +135,45 @@ create policy "profiles: delete by admin" on profiles for delete to authenticate
 drop policy if exists "announcements: read for members" on announcements;
 create policy "announcements: read for members" on announcements for select to authenticated using (true);
 drop policy if exists "announcements: write by staff or admin" on announcements;
-create policy "announcements: write by staff or admin" on announcements for insert to authenticated
-  with check (public.is_staff_or_admin());
+drop policy if exists "announcements: write by admin" on announcements;
+create policy "announcements: write by admin" on announcements for insert to authenticated
+  with check (public.is_admin());
 drop policy if exists "announcements: update by staff or admin" on announcements;
-create policy "announcements: update by staff or admin" on announcements for update to authenticated
-  using (public.is_staff_or_admin());
+drop policy if exists "announcements: update by admin" on announcements;
+create policy "announcements: update by admin" on announcements for update to authenticated
+  using (public.is_admin());
 drop policy if exists "announcements: delete by staff or admin" on announcements;
-create policy "announcements: delete by staff or admin" on announcements for delete to authenticated
-  using (public.is_staff_or_admin());
+drop policy if exists "announcements: delete by admin" on announcements;
+create policy "announcements: delete by admin" on announcements for delete to authenticated
+  using (public.is_admin());
 
 -- resources
 drop policy if exists "resources: read for members" on resources;
 create policy "resources: read for members" on resources for select to authenticated using (true);
 drop policy if exists "resources: upload by staff or admin" on resources;
-create policy "resources: upload by staff or admin" on resources for insert to authenticated
-  with check (public.is_staff_or_admin());
+drop policy if exists "resources: upload by admin" on resources;
+create policy "resources: upload by admin" on resources for insert to authenticated
+  with check (public.is_admin());
 drop policy if exists "resources: delete by staff or admin" on resources;
-create policy "resources: delete by staff or admin" on resources for delete to authenticated
-  using (public.is_staff_or_admin());
+drop policy if exists "resources: delete by admin" on resources;
+create policy "resources: delete by admin" on resources for delete to authenticated
+  using (public.is_admin());
 
 -- events
 drop policy if exists "events: read for members" on events;
 create policy "events: read for members" on events for select to authenticated using (true);
 drop policy if exists "events: write by staff or admin" on events;
-create policy "events: write by staff or admin" on events for all to authenticated
-  using (public.is_staff_or_admin()) with check (public.is_staff_or_admin());
+drop policy if exists "events: write by admin" on events;
+create policy "events: write by admin" on events for all to authenticated
+  using (public.is_admin()) with check (public.is_admin());
+
+-- event_attendees — le presenze si leggono da tutti, le scrive lo script
+-- di provisioning con la service_role key.
+drop policy if exists "attendees: read" on event_attendees;
+create policy "attendees: read" on event_attendees for select to authenticated using (true);
+drop policy if exists "attendees: write" on event_attendees;
+create policy "attendees: write" on event_attendees for all to authenticated
+  using (public.is_admin()) with check (public.is_admin());
 
 -- Eventi demo (solo se la tabella è vuota) --------------------------
 insert into events (title, date, location)

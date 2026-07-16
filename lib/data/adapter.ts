@@ -6,7 +6,7 @@ import type {
   Profile,
   Resource,
   ResourceCategory,
-  Role,
+  Tier,
 } from "./types";
 
 // ===================================================================
@@ -51,7 +51,7 @@ export interface Repo {
   getProfile(id: string): Profile | undefined;
   updateProfile(id: string, patch: Partial<Profile>): Profile | undefined;
   setStatus(id: string, status: MemberStatus): Profile | undefined;
-  setRole(id: string, role: Role): Profile | undefined;
+  setTier(id: string, tier: Tier): Profile | undefined;
 
   listAnnouncements(): Announcement[];
   createAnnouncement(input: AnnouncementInput): Announcement;
@@ -63,4 +63,8 @@ export interface Repo {
   createEvent(input: EventInput): ClubEvent;
   updateEvent(id: string, patch: Partial<EventInput>): ClubEvent | undefined;
   deleteEvent(id: string): void;
+
+  // Le presenze si popolano da /scripts/create-users.mjs a partire dagli
+  // elenchi contatti: qui sono di sola lettura.
+  listAttendeeIds(eventId: string): string[];
 }

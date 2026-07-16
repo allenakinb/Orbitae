@@ -19,6 +19,17 @@ export function formatDayMonth(iso: string): string {
   return dayMonthFmt.format(new Date(iso));
 }
 
+// "12/05/2026" — compatto, per il selettore evento della Home.
+const shortDateFmt = new Intl.DateTimeFormat("it-IT", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+});
+
+export function formatShortDate(iso: string): string {
+  return shortDateFmt.format(new Date(iso));
+}
+
 // "oggi", "ieri", "3 giorni fa", or an absolute date for older items.
 export function relativeTime(iso: string): string {
   const then = new Date(iso).getTime();

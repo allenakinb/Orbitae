@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import type { Profile } from "@/lib/data/types";
-import { ROLE_LABEL } from "@/lib/auth/permissions";
+import { TIER_LABEL } from "@/lib/auth/permissions";
 import { Avatar } from "@/components/ui/Avatar";
 import { OrbitMark } from "@/components/brand/OrbitMark";
 import { MemberOrbitCard } from "./MemberOrbitCard";
@@ -229,7 +229,7 @@ export function OrbitSystem({
                     onFocus={() => open(member.id)}
                     onBlur={() => setHovered(null)}
                     onClick={() => open(member.id)}
-                    aria-label={`${member.name} — ${ROLE_LABEL[member.role]}`}
+                    aria-label={`${member.name} — ${TIER_LABEL[member.tier]}`}
                     aria-haspopup="dialog"
                     className="group pointer-events-auto relative block cursor-pointer rounded-full transition-transform duration-300 ease-[var(--ease-out-expo)] hover:scale-[1.16] focus-visible:scale-[1.16]"
                   >

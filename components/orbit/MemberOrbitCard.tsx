@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { Briefcase, Building2, Mail, MapPin, X } from "lucide-react";
 import type { Profile } from "@/lib/data/types";
 import { Avatar } from "@/components/ui/Avatar";
-import { RoleBadge } from "@/components/ui/Badge";
+import { TierBadge } from "@/components/ui/Badge";
 import { LinkedinIcon } from "@/components/brand/LinkedinIcon";
 
 function Row({
@@ -80,7 +80,7 @@ export function MemberOrbitCard({
             {member.name}
           </h3>
           <div className="mt-1.5">
-            <RoleBadge role={member.role} />
+            <TierBadge tier={member.tier} />
           </div>
         </div>
       </div>

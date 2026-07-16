@@ -7,16 +7,25 @@ product
 ## Users
 
 Members of **Orbitae**, an invite-only business conversation club, plus the
-staff and admins who run it. Three roles, one portal:
+handful of people who run it. Everyone sees everything; the difference is who
+may change it.
 
-- **Membro** — a vetted member. Comes to see who else is in the network, read
-  club announcements, browse shared documents, and keep their own profile
-  current. Not a power user; visits occasionally, on desktop or phone, and
-  expects the club to feel as considered online as it does in person.
-- **Staff** — curates content: composes Bacheca announcements, uploads
-  documents. Trusted, but not administrative.
-- **Admin** — runs the club: invites members, sets roles and status, edits any
-  profile. Needs control without a heavy back-office.
+Every member carries one public **label**, taken from the club's own contact
+lists — it says what someone is to the club, never what they may do:
+
+- **Founder** — one of the eight who started Orbitae.
+- **Ambassador** — brings people into the network.
+- **Member** — a vetted member.
+
+A member comes to see who else is in the network, re-read the conversation
+recaps, and keep their own profile current. Not a power user; visits
+occasionally, on desktop or phone, and expects the club to feel as considered
+online as it does in person.
+
+Behind the labels, three accounts hold **admin** access: they publish events
+and recaps, set labels and status, and edit any profile. Admin is unlabelled —
+the only outward sign is the Admin page in the menu. Needs control without a
+heavy back-office.
 
 The interface is **Italian**. Access is invite-only — there is no public
 signup, and the product should never feel like a place you could stumble into.
@@ -24,11 +33,12 @@ signup, and the product should never feel like a place you could stumble into.
 ## Product Purpose
 
 Orbitae is the private home of the club between real-world encounters. It
-answers "who is in this network, and what's happening in it?" The signature is
-the Home **orbit**: every member revolves around the Orbitae mark, making the
-network itself the first thing you see and feel. Success is a member opening
-the portal and immediately sensing belonging to something selective, then
-finding the person, post, or document they came for without friction.
+answers "who was in the room, and what did we say?" The signature is the Home
+**orbit**: pick an evening from the selector and the people who actually
+attended it revolve around its subject, making the network itself the first
+thing you see and feel. Success is a member opening the portal and immediately
+sensing belonging to something selective, then finding the person, recap, or
+document they came for without friction.
 
 It is a focused club portal, not a platform: five surfaces (Home, Membri,
 Bacheca, Documenti, Admin), each doing one thing well. The UI never talks to a

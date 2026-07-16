@@ -4,12 +4,16 @@
 //   node scripts/create-users.mjs           crea gli utenti mancanti
 //   node scripts/create-users.mjs --reset   rigenera TUTTE le password
 //
+// Da eseguire DOPO supabase/migration-tier-presenze.sql (che crea la
+// colonna `tier`, la tabella `event_attendees` e i due eventi).
+//
 // Per ogni persona in scripts/members.mjs:
 //   1. crea l'utente Supabase Auth (email confermata) con una password
 //      generata leggibile, oppure lo salta se esiste già (--reset la
 //      rigenera);
-//   2. upserta la riga in `profiles` (ruolo, stato attivo, azienda, bio);
-//   3. se le tabelle sono vuote, semina bacheca e documenti di partenza.
+//   2. upserta la riga in `profiles` (accesso, etichetta, stato, azienda);
+//   3. registra le presenze agli eventi;
+//   4. se la tabella è vuota, semina i documenti di partenza.
 //
 // Al termine scrive le credenziali sulla Scrivania:
 //   ~/Desktop/Credenziali-Orbitae.html  (documento consegnabile)
@@ -28,7 +32,7 @@ import { randomInt } from "node:crypto";
 import dns from "node:dns";
 import { Agent, fetch as undiciFetch } from "undici";
 import { createClient } from "@supabase/supabase-js";
-import { MEMBERS } from "./members.mjs";
+import { EVENTS, MEMBERS } from "./members.mjs";
 
 // --- fetch resiliente al DNS -----------------------------------------
 // La cache DNS di macOS a volte serve SERVFAIL per i domini *.supabase.co
@@ -143,7 +147,7 @@ async function listAllUsers() {
 
 async function provision() {
   const existing = await listAllUsers();
-  const rows = []; // { name, email, role, password | null }
+  const rows = []; // { name, email, tier, password | null }
   const idByEmail = new Map();
 
   for (const m of MEMBERS) {
@@ -178,7 +182,8 @@ async function provision() {
       name: m.name,
       email: m.email,
       role: m.role,
-      status: "active",
+      tier: m.tier,
+      status: m.status ?? "active",
       sector: "",
       city: "",
       company: m.company || null,
@@ -188,47 +193,48 @@ async function provision() {
     });
     if (pErr) throw new Error(`profilo ${m.email}: ${pErr.message}`);
 
-    rows.push({ name: m.name, email: m.email, role: m.role, password });
+    rows.push({ name: m.name, email: m.email, tier: m.tier, password });
   }
 
   return { rows, idByEmail };
 }
 
+// --- presenze agli eventi --------------------------------------------
+// Sono queste a decidere chi orbita attorno a un incontro nella Home.
+// L'upsert le rende ripetibili senza duplicati.
+
+async function seedAttendance(idByEmail) {
+  const links = [];
+  for (const m of MEMBERS) {
+    for (const slug of m.events ?? []) {
+      const eventId = EVENTS[slug];
+      if (!eventId) throw new Error(`evento sconosciuto "${slug}" (${m.email})`);
+      links.push({
+        event_id: eventId,
+        profile_id: idByEmail.get(m.email.toLowerCase()),
+      });
+    }
+  }
+  if (!links.length) return;
+
+  const { error } = await admin
+    .from("event_attendees")
+    .upsert(links, { onConflict: "event_id,profile_id", ignoreDuplicates: true });
+  if (error) throw new Error(`presenze: ${error.message}`);
+
+  for (const [slug, id] of Object.entries(EVENTS)) {
+    const n = links.filter((l) => l.event_id === id).length;
+    console.log(`  + presenze ${slug.padEnd(15)} ${n} persone`);
+  }
+}
+
 // --- contenuti di partenza (solo se le tabelle sono vuote) -----------
+
+// Nessun annuncio di partenza: il racconto delle serate vive nel campo
+// `summary` degli eventi, e la Bacheca nasconde la sezione se è vuota.
 
 async function seedContent(idByEmail) {
   const author = (email) => idByEmail.get(email);
-
-  const { count: aCount } = await admin
-    .from("announcements")
-    .select("*", { count: "exact", head: true });
-  if (aCount === 0) {
-    const { error } = await admin.from("announcements").insert([
-      {
-        title: "Cena di networking — Milano, 10 luglio",
-        body: "Il prossimo incontro mensile si terrà giovedì 10 luglio alle 20:00 presso Palazzo Cordusio. Conferma la presenza entro il 5 luglio rispondendo in segreteria. Dress code: business.",
-        author_id: author("santino.cundari@orbitae.club"),
-        pinned: true,
-        created_at: "2026-06-24T09:30:00Z",
-      },
-      {
-        title: "Nuovo ciclo di tavoli tematici",
-        body: "Da settembre partono i tavoli di lavoro su Innovazione, Internazionalizzazione e Finanza straordinaria. Ogni membro può iscriversi a un massimo di due tavoli. I dettagli nei Materiali.",
-        author_id: author("lorenzo.scisciani@orbitae.club"),
-        pinned: false,
-        created_at: "2026-06-18T14:00:00Z",
-      },
-      {
-        title: "Benvenuti ai nuovi membri",
-        body: "Diamo il benvenuto in Orbita ai nuovi membri del network. Scrivete loro per una presentazione.",
-        author_id: author("lorenzo.scisciani@orbitae.club"),
-        pinned: false,
-        created_at: "2026-06-02T08:00:00Z",
-      },
-    ]);
-    if (error) throw new Error(`seed bacheca: ${error.message}`);
-    console.log("  + bacheca: 3 annunci di partenza");
-  }
 
   const { count: rCount } = await admin
     .from("resources")
@@ -259,7 +265,12 @@ async function seedContent(idByEmail) {
 
 // --- documento credenziali sulla Scrivania ---------------------------
 
-const ROLE_LABEL = { admin: "Admin", staff: "Staff", member: "Membro" };
+// Nel documento compare l'etichetta pubblica, non chi ha l'accesso admin.
+const TIER_LABEL = {
+  founder: "Founder",
+  ambassador: "Ambassador",
+  member: "Member",
+};
 
 function writeCredentialDocs(rows) {
   const desktop = join(homedir(), "Desktop");
@@ -270,10 +281,10 @@ function writeCredentialDocs(rows) {
   });
 
   const csv = [
-    "nome;email;ruolo;password",
+    "nome;email;etichetta;password",
     ...rows.map(
       (r) =>
-        `${r.name};${r.email};${ROLE_LABEL[r.role]};${r.password ?? "(invariata)"}`,
+        `${r.name};${r.email};${TIER_LABEL[r.tier]};${r.password ?? "(invariata)"}`,
     ),
   ].join("\n");
   const csvPath = join(desktop, "credenziali-orbitae.csv");
@@ -285,7 +296,7 @@ function writeCredentialDocs(rows) {
         <tr>
           <td>${esc(r.name)}</td>
           <td class="mono">${esc(r.email)}</td>
-          <td><span class="badge badge-${r.role}">${ROLE_LABEL[r.role]}</span></td>
+          <td><span class="badge badge-${r.tier}">${TIER_LABEL[r.tier]}</span></td>
           <td class="mono pw">${r.password ? esc(r.password) : "<em>invariata</em>"}</td>
         </tr>`;
 
@@ -309,8 +320,8 @@ function writeCredentialDocs(rows) {
   .mono { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 13px; }
   .pw { font-weight: 700; }
   .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; }
-  .badge-admin { background: #fbe3d6; color: #9a3d16; }
-  .badge-staff { background: #e8e3f5; color: #4c3a8a; }
+  .badge-founder { background: #fbe3d6; color: #9a3d16; }
+  .badge-ambassador { background: #e8e3f5; color: #4c3a8a; }
   .badge-member { background: #e5e7e3; color: #44514a; }
   footer { margin-top: 26px; font-size: 12.5px; color: #a8a29e; }
   @media print { body { padding: 24px; background: #fff; } .note { break-inside: avoid; } tr { break-inside: avoid; } }
@@ -326,7 +337,7 @@ function writeCredentialDocs(rows) {
   Accesso dal portale con email e password; dalla pagina <strong>Account</strong> ognuno può cambiare
   la password al primo ingresso.</p>
   <table>
-    <thead><tr><th>Nome</th><th>Email di accesso</th><th>Ruolo</th><th>Password</th></tr></thead>
+    <thead><tr><th>Nome</th><th>Email di accesso</th><th>Etichetta</th><th>Password</th></tr></thead>
     <tbody>${rows.map(tr).join("")}
     </tbody>
   </table>
@@ -344,13 +355,14 @@ function writeCredentialDocs(rows) {
 
 console.log(`Orbitae — provisioning (${RESET ? "reset password" : "solo nuovi"})…`);
 const { rows, idByEmail } = await provision();
+await seedAttendance(idByEmail);
 await seedContent(idByEmail);
 const { csvPath, htmlPath } = writeCredentialDocs(rows);
 
 console.log("\nCredenziali:");
 for (const r of rows) {
   console.log(
-    `  ${r.email.padEnd(36)} ${ROLE_LABEL[r.role].padEnd(7)} ${r.password ?? "(invariata)"}`,
+    `  ${r.email.padEnd(36)} ${TIER_LABEL[r.tier].padEnd(10)} ${r.password ?? "(invariata)"}`,
   );
 }
 console.log(`\n✓ ${rows.length} membri provisionati.`);

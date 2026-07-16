@@ -10,11 +10,12 @@ import type {
 import type {
   Announcement,
   ClubEvent,
+  EventAttendance,
   EventPerson,
   MemberStatus,
   Profile,
   Resource,
-  Role,
+  Tier,
 } from "./types";
 
 // ===================================================================
@@ -30,9 +31,16 @@ interface DB {
   announcements: Announcement[];
   resources: Resource[];
   events: ClubEvent[];
+  attendance: EventAttendance[];
 }
 
-const EMPTY: DB = { profiles: [], announcements: [], resources: [], events: [] };
+const EMPTY: DB = {
+  profiles: [],
+  announcements: [],
+  resources: [],
+  events: [],
+  attendance: [],
+};
 
 let db: DB = EMPTY;
 const listeners = new Set<() => void>();
@@ -47,7 +55,8 @@ interface ProfileRow {
   id: string;
   name: string;
   email: string;
-  role: Role;
+  role: string; // enum member_role: conserva il valore legacy 'staff'
+  tier: Tier | null; // null nella finestra fra deploy e migrazione
   status: MemberStatus;
   sector: string;
   city: string;
@@ -64,7 +73,10 @@ function toProfile(r: ProfileRow): Profile {
     id: r.id,
     name: r.name,
     email: r.email,
-    role: r.role,
+    // Nessuna riga dovrebbe più valere 'staff', ma l'enum lo permette:
+    // qualunque cosa non sia 'admin' entra nella UI come membro.
+    role: r.role === "admin" ? "admin" : "member",
+    tier: r.tier ?? "member",
     status: r.status,
     sector: r.sector,
     city: r.city,
@@ -84,6 +96,7 @@ function toProfileRow(patch: Partial<Profile>): Record<string, unknown> {
   const row: Record<string, unknown> = {};
   if ("name" in patch) row.name = patch.name;
   if ("role" in patch) row.role = patch.role;
+  if ("tier" in patch) row.tier = patch.tier;
   if ("status" in patch) row.status = patch.status;
   if ("sector" in patch) row.sector = patch.sector;
   if ("city" in patch) row.city = patch.city;
@@ -169,6 +182,15 @@ function toClubEvent(r: EventRow): ClubEvent {
   };
 }
 
+interface AttendanceRow {
+  event_id: string;
+  profile_id: string;
+}
+
+function toAttendance(r: AttendanceRow): EventAttendance {
+  return { eventId: r.event_id, profileId: r.profile_id };
+}
+
 // Only the keys present in the patch are sent (see toProfileRow above);
 // jsonb columns take arrays as-is, and `undefined` optional fields become
 // SQL null so clearing a field actually persists.
@@ -192,22 +214,29 @@ function toEventRow(patch: Partial<ClubEvent>): Record<string, unknown> {
 // Fetches everything the portal shows in one round. Called after
 // sign-in (RLS only opens the tables to authenticated users).
 export async function loadAll(): Promise<boolean> {
-  const [p, a, r, e] = await Promise.all([
+  const [p, a, r, e, at] = await Promise.all([
     supabase.from("profiles").select("*"),
     supabase.from("announcements").select("*"),
     supabase.from("resources").select("*"),
     supabase.from("events").select("*"),
+    supabase.from("event_attendees").select("*"),
   ]);
   const error = p.error ?? a.error ?? r.error ?? e.error;
   if (error) {
     console.error("[orbitae] caricamento dati fallito:", error.message);
     return false;
   }
+  // Le presenze non sono vitali: se la migration non è ancora passata il
+  // portale resta in piedi con l'orbita vuota, invece di non aprirsi.
+  if (at.error) {
+    console.error("[orbitae] presenze non caricate:", at.error.message);
+  }
   db = {
     profiles: (p.data as ProfileRow[]).map(toProfile),
     announcements: (a.data as AnnouncementRow[]).map(toAnnouncement),
     resources: (r.data as ResourceRow[]).map(toResource),
     events: (e.data as EventRow[]).map(toClubEvent),
+    attendance: ((at.data as AttendanceRow[] | null) ?? []).map(toAttendance),
   };
   emit();
   return true;
@@ -271,8 +300,8 @@ export const repo: Repo = {
     return this.updateProfile(pid, { status });
   },
 
-  setRole(pid, role: Role) {
-    return this.updateProfile(pid, { role });
+  setTier(pid, tier: Tier) {
+    return this.updateProfile(pid, { tier });
   },
 
   listAnnouncements() {
@@ -338,11 +367,16 @@ export const repo: Repo = {
     return item;
   },
 
+  // Tutti gli eventi, dal più recente: il club racconta gli incontri
+  // passati, non solo quelli in programma.
   listEvents() {
-    const today = new Date().toISOString().slice(0, 10);
-    return [...db.events]
-      .filter((e) => e.date >= today)
-      .sort((a, b) => a.date.localeCompare(b.date));
+    return [...db.events].sort((a, b) => b.date.localeCompare(a.date));
+  },
+
+  listAttendeeIds(eventId) {
+    return db.attendance
+      .filter((a) => a.eventId === eventId)
+      .map((a) => a.profileId);
   },
 
   createEvent(input: EventInput) {

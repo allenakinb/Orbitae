@@ -33,16 +33,18 @@ gated by `lib/auth/permissions.ts`).
 ## Features
 
 - **Login** — invite-only (no public signup), branded, minimal.
-- **Home** — the orbit: all members rotating around the Orbitae mark (hover to
-  enlarge + reveal name, click to open the profile), welcome card, latest
-  Bacheca posts, quick stats. Static, distributed orbit under
-  `prefers-reduced-motion`.
-- **Membri** — searchable directory (name / sector / city / status) + profile
-  pages; only admin edits others.
-- **Bacheca** — announcements feed; admin/staff compose, all read.
+- **Home** — the orbit: pick an evening from the selector and the people who
+  attended it rotate around its subject (hover to enlarge + reveal name, click
+  to open the profile), quick stats, then the evening's card and recap. Static,
+  distributed orbit under `prefers-reduced-motion`.
+- **Membri** — the whole network in alphabetical order, searchable by name;
+  open to everyone. Only admin edits others.
+- **Bacheca** — the evenings, each with its recap; only admin creates or edits
+  them. The announcements section appears only when there is something in it.
 - **Documenti** — library by category (Verbali · Regolamenti · Materiali);
-  admin/staff upload, everyone downloads.
-- **Admin** — member table with inline role/status, invite form, summary.
+  admin uploads, everyone downloads.
+- **Admin** — member table with inline label/status, summary. Admin access
+  itself is not editable here (see `supabase/migration-tier-presenze.sql`).
 - **Avatar uploads** — members/admin upload a photo (else brand-colored
   initials), reflected live in the orbit and directory.
 - **Forum** — present in the nav as "Presto" (planned).

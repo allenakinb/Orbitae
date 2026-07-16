@@ -1,6 +1,7 @@
 import { CalendarDays, Clock, MapPin, Pencil, Trash2 } from "lucide-react";
 import type { ClubEvent, EventPerson } from "@/lib/data/types";
 import { formatDate, formatDayMonth } from "@/lib/format";
+import { EventRecap } from "./EventRecap";
 
 function PeopleGroup({ label, people }: { label: string; people: EventPerson[] }) {
   return (
@@ -93,11 +94,7 @@ export function EventCard({
               </span>
             )}
           </div>
-          {event.summary && (
-            <p className="mt-3 text-sm leading-relaxed text-ink-muted">
-              {event.summary}
-            </p>
-          )}
+          {event.summary && <EventRecap text={event.summary} />}
           {hasPeople && (
             <div className="mt-4 grid gap-3 border-t border-border pt-3 sm:grid-cols-2">
               {event.speakers.length > 0 && (

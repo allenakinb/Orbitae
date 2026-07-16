@@ -2,11 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
-import {
-  useAnnouncements,
-  useProfiles,
-  useUpcomingEvents,
-} from "@/lib/data/hooks";
+import { useAnnouncements, useEvents, useProfiles } from "@/lib/data/hooks";
 import { repo } from "@/lib/data/store";
 import type { EventInput } from "@/lib/data/adapter";
 import type { ClubEvent } from "@/lib/data/types";
@@ -21,7 +17,7 @@ import { Button } from "@/components/ui/Button";
 
 export default function BachecaPage() {
   const announcements = useAnnouncements();
-  const events = useUpcomingEvents();
+  const events = useEvents();
   const profiles = useProfiles();
   const { user } = useAuth();
   const mayManageEvents = can(user?.role, "manageEvents");
@@ -58,9 +54,9 @@ export default function BachecaPage() {
       />
 
       {(events.length > 0 || mayManageEvents) && (
-        <section aria-label="Prossimi eventi" className="mt-8">
+        <section aria-label="Eventi" className="mt-8">
           <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="font-display text-lg text-ink">Prossimi eventi</h2>
+            <h2 className="font-display text-lg text-ink">Eventi</h2>
             {mayManageEvents && eventDraft === null && (
               <Button size="sm" onClick={() => setEventDraft("new")}>
                 <Plus size={16} /> Nuovo evento
@@ -94,25 +90,29 @@ export default function BachecaPage() {
             mayManageEvents &&
             eventDraft === null && (
               <p className="text-sm text-ink-muted">
-                Nessun evento in programma. Crea il primo con «Nuovo evento».
+                Nessun evento. Crea il primo con «Nuovo evento».
               </p>
             )
           )}
         </section>
       )}
 
-      <section aria-label="Annunci" className="mt-10">
-        <h2 className="mb-3 font-display text-lg text-ink">Annunci</h2>
-        <div className="flex flex-col gap-4">
-          {announcements.map((a) => (
-            <AnnouncementCard
-              key={a.id}
-              announcement={a}
-              author={byId.get(a.authorId)}
-            />
-          ))}
-        </div>
-      </section>
+      {/* Il racconto delle serate vive nelle card evento: la sezione
+          annunci compare solo se c'è qualcosa da dire. */}
+      {announcements.length > 0 && (
+        <section aria-label="Annunci" className="mt-10">
+          <h2 className="mb-3 font-display text-lg text-ink">Annunci</h2>
+          <div className="flex flex-col gap-4">
+            {announcements.map((a) => (
+              <AnnouncementCard
+                key={a.id}
+                announcement={a}
+                author={byId.get(a.authorId)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </PageContainer>
   );
 }

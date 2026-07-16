@@ -17,7 +17,7 @@ import { resizeToDataUrl, ACCEPTED_IMAGE } from "@/lib/brand/image";
 import { PageContainer } from "@/components/shell/PageContainer";
 import { SectionTitle } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
-import { RoleBadge, StatusBadge } from "@/components/ui/Badge";
+import { TierBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 
@@ -37,8 +37,7 @@ export default function AccountPage() {
         <div className="min-w-0 flex-1">
           <h1 className="font-display text-2xl text-ink">{user.name}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <RoleBadge role={user.role} />
-            <StatusBadge status={user.status} />
+            <TierBadge tier={user.tier} />
           </div>
           <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink-muted">
             <span className="inline-flex items-center gap-1.5">

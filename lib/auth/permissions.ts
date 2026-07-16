@@ -1,24 +1,24 @@
-import type { Role } from "@/lib/data/types";
+import type { Role, Tier } from "@/lib/data/types";
 
 // Single source of truth for what each role may do. Mirrors the matrix
 // in the plan and is enforced both in the UI and in repo-calling actions.
 export type Permission =
   | "viewAdmin" // open the admin panel
   | "viewMembers" // browse the member directory
-  | "manageMembers" // edit member data, change status/role
+  | "manageMembers" // edit member data, change status/tier
   | "postAnnouncement" // create/edit Bacheca posts
   | "uploadResource" // upload documents
   | "manageEvents"; // create/edit/delete events
 
 const MATRIX: Record<Permission, Role[]> = {
-  // Solo gli Admin vedono il pannello e la directory dei membri;
-  // lo Staff naviga come un membro ma può pubblicare e caricare.
+  // Tutti vedono tutto: la directory è aperta a chiunque abbia un accesso.
+  // Mettere mano ai contenuti resta appannaggio dei tre admin.
   viewAdmin: ["admin"],
-  viewMembers: ["admin"],
+  viewMembers: ["admin", "member"],
   manageMembers: ["admin"],
-  postAnnouncement: ["admin", "staff"],
-  uploadResource: ["admin", "staff"],
-  manageEvents: ["admin", "staff"],
+  postAnnouncement: ["admin"],
+  uploadResource: ["admin"],
+  manageEvents: ["admin"],
 };
 
 export function can(role: Role | undefined, perm: Permission): boolean {
@@ -26,8 +26,9 @@ export function can(role: Role | undefined, perm: Permission): boolean {
   return MATRIX[perm].includes(role);
 }
 
-export const ROLE_LABEL: Record<Role, string> = {
-  admin: "Admin",
-  staff: "Staff",
-  member: "Membro",
+// L'etichetta accanto al nome dice il tier, mai il ruolo d'accesso.
+export const TIER_LABEL: Record<Tier, string> = {
+  founder: "Founder",
+  ambassador: "Ambassador",
+  member: "Member",
 };

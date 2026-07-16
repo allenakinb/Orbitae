@@ -2,17 +2,13 @@
 
 import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, Clock, MapPin } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { can } from "@/lib/auth/permissions";
-import {
-  useAnnouncements,
-  useProfiles,
-  useUpcomingEvents,
-} from "@/lib/data/hooks";
+import { useEventAttendees, useEvents, useProfiles } from "@/lib/data/hooks";
 import { PageContainer } from "@/components/shell/PageContainer";
 import { OrbitSystem } from "@/components/orbit/OrbitSystem";
-import { formatDate, formatDayMonth } from "@/lib/format";
+import { EventCard } from "@/components/content/EventCard";
+import { Select } from "@/components/ui/Field";
+import { formatShortDate } from "@/lib/format";
 
 function greeting() {
   const h = new Date().getHours();
@@ -24,22 +20,24 @@ function greeting() {
 export default function HomePage() {
   const { user } = useAuth();
   const profiles = useProfiles();
-  const announcements = useAnnouncements();
-  const events = useUpcomingEvents();
+  const events = useEvents(); // dal più recente
 
   // Compute the time-based greeting after mount to avoid an SSR/client
   // hydration mismatch; "Bentornato" is a stable, time-neutral default.
   const [greet, setGreet] = useState("Bentornato");
   useEffect(() => setGreet(greeting()), []);
 
-  const inOrbit = profiles.filter((p) => p.status !== "pending");
-  const activeCount = profiles.filter((p) => p.status === "active").length;
+  // L'orbita racconta un evento per volta: si apre sull'ultimo.
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = events.find((e) => e.id === selectedId) ?? events[0];
+  const attendees = useEventAttendees(selected?.id);
+
+  const members = profiles.filter((p) => p.status !== "pending");
   const firstName = user?.name.split(" ")[0] ?? "";
-  const nextEvent = events[0];
 
   return (
     <PageContainer wide>
-      {/* Keyboard/AT: skip the orbit straight to the next event */}
+      {/* Keyboard/AT: skip the orbit straight to the event */}
       <a
         href="#eventi"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[var(--z-sticky)] focus:rounded-[var(--radius)] focus:border focus:border-border-strong focus:bg-elevated focus:px-3 focus:py-2 focus:text-sm focus:text-ink"
@@ -47,11 +45,26 @@ export default function HomePage() {
         Salta al contenuto
       </a>
 
-      {/* Hero — the orbit, centred, with the next event at its core */}
+      {/* Hero — the orbit, centred, with the chosen event at its core */}
       <section
-        aria-label="I membri del network in orbita"
-        className="motion-safe:animate-fade-rise"
+        aria-label="I partecipanti dell'evento in orbita"
+        className="relative motion-safe:animate-fade-rise"
       >
+        {events.length > 0 && (
+          <Select
+            value={selected?.id ?? ""}
+            onChange={(e) => setSelectedId(e.target.value)}
+            aria-label="Seleziona evento"
+            className="mb-4 h-9 text-sm sm:absolute sm:left-0 sm:top-0 sm:z-20 sm:mb-0 sm:w-auto sm:max-w-[19rem]"
+          >
+            {events.map((e) => (
+              <option key={e.id} value={e.id}>
+                {formatShortDate(e.date)} — {e.title}
+              </option>
+            ))}
+          </Select>
+        )}
+
         <header className="text-center">
           <p className="text-sm text-ink-muted" suppressHydrationWarning>
             {greet},
@@ -60,12 +73,20 @@ export default function HomePage() {
             {firstName}
           </h1>
           <p className="mx-auto mt-2 max-w-md text-sm text-ink-muted">
-            La tua orbita, {inOrbit.length} membri nel network. Passa sopra
-            un avatar per scoprirli.
+            {selected
+              ? `${attendees.length} persone in orbita attorno a «${selected.title}». Passa sopra un avatar per scoprirle.`
+              : "Nessun evento da mostrare."}
           </p>
         </header>
+
         <div className="mx-auto mt-4 w-full max-w-[680px]">
-          <OrbitSystem members={inOrbit} centerLabel={nextEvent?.title} />
+          {attendees.length > 0 ? (
+            <OrbitSystem members={attendees} centerLabel={selected?.title} />
+          ) : (
+            <p className="py-12 text-center text-sm text-ink-muted">
+              Nessun partecipante registrato per questo evento.
+            </p>
+          )}
         </div>
       </section>
 
@@ -75,15 +96,9 @@ export default function HomePage() {
         className="mt-10 flex flex-wrap items-baseline justify-center gap-x-3 gap-y-2 border-y border-border py-4"
       >
         {[
-          {
-            value: activeCount,
-            label: "membri attivi",
-            // La directory è riservata ad Admin/Staff: per i membri il
-            // numero resta, il link punta all'orbita stessa.
-            href: can(user?.role, "viewMembers") ? "/membri" : "#eventi",
-          },
-          { value: events.length, label: "prossimi eventi", href: "#eventi" },
-          { value: announcements.length, label: "annunci", href: "/bacheca" },
+          { value: members.length, label: "membri", href: "/membri" },
+          { value: events.length, label: "eventi", href: "/bacheca" },
+          { value: attendees.length, label: "partecipanti", href: "#eventi" },
         ].map((s, i) => (
           <Fragment key={s.label}>
             {i > 0 && (
@@ -104,59 +119,15 @@ export default function HomePage() {
         ))}
       </section>
 
-      {/* Next event — a single, richer card */}
+      {/* The chosen event, told in full — same card as the Bacheca */}
       <section id="eventi" className="mx-auto mt-8 max-w-2xl scroll-mt-6">
-        <h2 className="mb-3 font-display text-lg text-ink">Prossimo evento</h2>
-        {!nextEvent ? (
+        <h2 className="mb-3 font-display text-lg text-ink">L&apos;evento</h2>
+        {!selected ? (
           <div className="rounded-[var(--radius-lg)] border border-dashed border-border bg-surface/50 p-6 text-center">
-            <p className="text-sm text-ink-muted">Nessun evento in programma.</p>
+            <p className="text-sm text-ink-muted">Nessun evento in bacheca.</p>
           </div>
         ) : (
-          <article className="rounded-[var(--radius-lg)] border border-border bg-surface p-5 sm:p-6">
-            <div className="flex items-start gap-4 sm:gap-5">
-              <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-[var(--radius)] bg-accent-soft text-accent">
-                <span className="text-base font-bold leading-none">
-                  {formatDayMonth(nextEvent.date).split(" ")[0]}
-                </span>
-                <span className="mt-0.5 text-[0.62rem] uppercase leading-none">
-                  {formatDayMonth(nextEvent.date).split(" ")[1]}
-                </span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="font-display text-lg text-ink sm:text-xl">
-                  {nextEvent.title}
-                </h3>
-                {nextEvent.subtitle && (
-                  <p className="mt-0.5 text-sm text-ink-muted">
-                    {nextEvent.subtitle}
-                  </p>
-                )}
-                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-ink-muted">
-                  <span className="inline-flex items-center gap-1.5">
-                    <CalendarDays size={15} className="text-ink-faint" />
-                    {formatDate(nextEvent.date)}
-                  </span>
-                  {nextEvent.time && (
-                    <span className="inline-flex items-center gap-1.5">
-                      <Clock size={15} className="text-ink-faint" />
-                      {nextEvent.time}
-                    </span>
-                  )}
-                  {nextEvent.location && (
-                    <span className="inline-flex items-center gap-1.5">
-                      <MapPin size={15} className="text-ink-faint" />
-                      {nextEvent.location}
-                    </span>
-                  )}
-                </div>
-                {nextEvent.description && (
-                  <p className="mt-3 text-sm leading-relaxed text-ink-muted">
-                    {nextEvent.description}
-                  </p>
-                )}
-              </div>
-            </div>
-          </article>
+          <EventCard event={selected} />
         )}
       </section>
     </PageContainer>

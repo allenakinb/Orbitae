@@ -1,6 +1,6 @@
 import { cn } from "@/lib/cn";
-import { ROLE_LABEL } from "@/lib/auth/permissions";
-import type { MemberStatus, Role } from "@/lib/data/types";
+import { TIER_LABEL } from "@/lib/auth/permissions";
+import type { MemberStatus, Tier } from "@/lib/data/types";
 
 export function Badge({
   children,
@@ -54,6 +54,8 @@ const STATUS: Record<
   },
 };
 
+// Lo stato è materia da pannello Admin: le pagine dei membri mostrano
+// solo il tier.
 export function StatusBadge({ status }: { status: MemberStatus }) {
   const s = STATUS[status];
   return (
@@ -67,19 +69,18 @@ export function StatusBadge({ status }: { status: MemberStatus }) {
   );
 }
 
-export function RoleBadge({ role }: { role: Role }) {
-  const accent = role === "admin";
-  const staff = role === "staff";
+export function TierBadge({ tier }: { tier: Tier }) {
   return (
     <Badge
       className={cn(
         "border",
-        accent && "border-transparent bg-accent-soft text-accent-hover",
-        staff && "border-border-strong text-ink",
-        role === "member" && "border-border text-ink-muted",
+        tier === "founder" &&
+          "border-transparent bg-accent-soft text-accent-hover",
+        tier === "ambassador" && "border-border-strong text-ink",
+        tier === "member" && "border-border text-ink-muted",
       )}
     >
-      {ROLE_LABEL[role]}
+      {TIER_LABEL[tier]}
     </Badge>
   );
 }

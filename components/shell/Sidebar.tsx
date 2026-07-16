@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { LogOut, PanelLeftClose } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { NAV } from "@/lib/nav";
-import { can, ROLE_LABEL } from "@/lib/auth/permissions";
+import { can, TIER_LABEL } from "@/lib/auth/permissions";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { Logo } from "@/components/brand/Logo";
 import { Avatar } from "@/components/ui/Avatar";
@@ -120,7 +120,7 @@ export function Sidebar({
               {user.name}
             </span>
             <span className="block text-xs text-ink-muted">
-              {ROLE_LABEL[user.role]}
+              {TIER_LABEL[user.tier]}
             </span>
           </span>
         </Link>
