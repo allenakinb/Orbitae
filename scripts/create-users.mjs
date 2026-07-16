@@ -180,7 +180,9 @@ async function provision() {
     const { error: pErr } = await admin.from("profiles").upsert({
       id,
       name: m.name,
-      email: m.email,
+      // La scheda del membro mostra la mail personale; l'email di login
+      // (@orbitae.club) resta solo in Supabase Auth, non nel profilo.
+      email: m.personalEmail || m.email,
       role: m.role,
       tier: m.tier,
       status: m.status ?? "active",
