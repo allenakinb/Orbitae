@@ -2,7 +2,7 @@
 
 import { Fragment, useMemo } from "react";
 import Link from "next/link";
-import { ShieldCheck, UserPlus } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { useProfiles } from "@/lib/data/hooks";
 import { repo } from "@/lib/data/store";
 import { useAuth } from "@/lib/auth/AuthProvider";
@@ -70,20 +70,6 @@ export default function AdminPage() {
           </Fragment>
         ))}
       </div>
-
-      {mayManage && (
-        <p className="mt-4 flex items-start gap-2.5 rounded-[var(--radius)] border border-border bg-surface px-4 py-3 text-sm text-ink-muted">
-          <UserPlus size={16} className="mt-0.5 shrink-0 text-ink-faint" />
-          <span>
-            I nuovi accessi (email + password) si creano con lo script{" "}
-            <code className="rounded bg-surface-2 px-1.5 py-0.5 text-xs">
-              scripts/create-users.mjs
-            </code>{" "}
-            o dalla dashboard Supabase. Da qui gestisci etichetta e stato dei
-            membri esistenti; l&apos;accesso admin si cambia solo via SQL.
-          </span>
-        </p>
-      )}
 
       {/* Members table */}
       <div className="mt-6 overflow-x-auto rounded-[var(--radius-lg)] border border-border bg-surface">
