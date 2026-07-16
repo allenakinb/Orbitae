@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { useEventAttendees, useEvents, useProfiles } from "@/lib/data/hooks";
+import { useEventAttendees, useEvents } from "@/lib/data/hooks";
 import { PageContainer } from "@/components/shell/PageContainer";
 import { OrbitSystem } from "@/components/orbit/OrbitSystem";
 import { EventCard } from "@/components/content/EventCard";
@@ -19,7 +19,6 @@ function greeting() {
 
 export default function HomePage() {
   const { user } = useAuth();
-  const profiles = useProfiles();
   const events = useEvents(); // dal più recente
 
   // Compute the time-based greeting after mount to avoid an SSR/client
@@ -32,7 +31,6 @@ export default function HomePage() {
   const selected = events.find((e) => e.id === selectedId) ?? events[0];
   const attendees = useEventAttendees(selected?.id);
 
-  const members = profiles.filter((p) => p.status !== "pending");
   const firstName = user?.name.split(" ")[0] ?? "";
 
   return (
@@ -96,8 +94,6 @@ export default function HomePage() {
         className="mt-10 flex flex-wrap items-baseline justify-center gap-x-3 gap-y-2 border-y border-border py-4"
       >
         {[
-          { value: members.length, label: "membri", href: "/membri" },
-          { value: events.length, label: "eventi", href: "/bacheca" },
           { value: attendees.length, label: "partecipanti", href: "#eventi" },
         ].map((s, i) => (
           <Fragment key={s.label}>

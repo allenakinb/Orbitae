@@ -38,7 +38,7 @@ export const MEMBERS = [
   { name: "Santino Cundari", email: "santino.cundari@orbitae.club", role: "admin", tier: "ambassador", events: ["talent-war"], company: "Marketing Automation (Zucchetti) - eda.study", bio: "Product & sales manager - founder - marketing e AI", linkedin: "https://www.linkedin.com/in/santino-cundari-020585/", joinedAt: "2024-03-15" },
   { name: "Paolo Lanciani", email: "paolo.lanciani@orbitae.club", role: "member", tier: "ambassador", events: BOTH, company: "De Micheli Lanciani Motta", bio: "Coach e psicologo del lavoro e owner", linkedin: "https://www.linkedin.com/in/paololanciani/", joinedAt: "2024-07-04" },
   { name: "Anna Albini", email: "anna.albini@orbitae.club", role: "member", tier: "ambassador", events: BOTH, company: "Wellington Management", bio: "Business Developer", linkedin: "https://www.linkedin.com/in/anna-albini-786b1a26/", joinedAt: "2024-08-05" },
-  { name: "Maria Serena Sarno", email: "mariaserena.sarno@orbitae.club", role: "member", tier: "ambassador", events: ["valore-azienda"], company: "", bio: "Fotografa ritrattista", linkedin: "https://www.linkedin.com/in/serenasarno", joinedAt: "2026-07-08" },
+  { name: "Serena Sarno", email: "serena.sarno@orbitae.club", role: "member", tier: "ambassador", events: ["valore-azienda"], company: "", bio: "Fotografa ritrattista", linkedin: "https://www.linkedin.com/in/serenasarno", joinedAt: "2026-07-08" },
 
   // --- Member · Talent war (12/05/2026) ------------------------------
   { name: "Mario Distasi", email: "mario.distasi@orbitae.club", role: "member", tier: "member", events: ["talent-war"], company: "Mercer (gruppo Marsh)", bio: "Associate Principal Compensation & Governance", linkedin: "https://www.linkedin.com/in/mario-distasi/", joinedAt: "2024-01-01" },
