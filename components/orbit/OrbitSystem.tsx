@@ -29,23 +29,58 @@ interface Placed {
   angle: number; // radians
 }
 
-function layout(members: Profile[]): { ring: RingDef; items: Placed[] }[] {
-  const rings = RINGS.map((r) => ({ ring: r, items: [] as Placed[] }));
-  let idx = 0;
-  let r = 0;
+// PRNG deterministico: la stessa lista di membri disegna sempre lo stesso
+// cielo. Math.random() rimescolerebbe a ogni render e romperebbe il match
+// di idratazione fra HTML del server e client.
+function mulberry32(seed: number) {
+  return () => {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function seedFrom(members: Profile[]) {
+  let h = 0x811c9dc5;
   for (const m of members) {
+    for (let i = 0; i < m.id.length; i++) {
+      h ^= m.id.charCodeAt(i);
+      h = Math.imul(h, 0x01000193);
+    }
+  }
+  return h >>> 0;
+}
+
+function layout(members: Profile[]): { ring: RingDef; items: Placed[] }[] {
+  const rand = mulberry32(seedFrom(members));
+
+  // Mischia chi finisce su quale anello: niente ordine alfabetico dal centro.
+  const shuffled = [...members];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  const rings = RINGS.map((r) => ({ ring: r, items: [] as Placed[] }));
+  let r = 0;
+  for (const m of shuffled) {
     while (r < rings.length - 1 && rings[r].items.length >= rings[r].ring.capacity) {
       r++;
     }
     rings[r].items.push({ member: m, ring: rings[r].ring, angle: 0 });
-    idx++;
   }
-  // Spread each ring's members evenly, offsetting alternate rings.
-  rings.forEach((group, gi) => {
+  // Ogni anello parte da un angolo casuale e ogni avatar oscilla attorno al
+  // proprio posto: la disposizione respira (anche in verticale) ma il jitter
+  // resta sotto metà passo, così due avatar non si sovrappongono mai.
+  rings.forEach((group) => {
     const n = group.items.length;
-    const offset = (gi * Math.PI) / n || 0;
+    if (!n) return;
+    const start = rand() * Math.PI * 2;
+    const slot = (Math.PI * 2) / n;
     group.items.forEach((it, i) => {
-      it.angle = (i / n) * Math.PI * 2 + offset;
+      it.angle = start + i * slot + (rand() - 0.5) * slot * 0.55;
     });
   });
   return rings.filter((g) => g.items.length > 0);

@@ -117,7 +117,7 @@ const WORDS_B = [
   "Vetta",
 ];
 
-const used = new Set();
+const used = new Set(MEMBERS.map((m) => m.password).filter(Boolean));
 function genPassword() {
   for (;;) {
     const pw = `${WORDS_A[randomInt(WORDS_A.length)]}-${
@@ -156,7 +156,7 @@ async function provision() {
     let password = null;
 
     if (!id) {
-      password = genPassword();
+      password = m.password ?? genPassword();
       const { data, error } = await admin.auth.admin.createUser({
         email: m.email,
         password,
@@ -167,7 +167,7 @@ async function provision() {
       id = data.user.id;
       console.log(`  + creato   ${m.email}`);
     } else if (RESET) {
-      password = genPassword();
+      password = m.password ?? genPassword();
       const { error } = await admin.auth.admin.updateUserById(id, { password });
       if (error) throw new Error(`updateUser ${m.email}: ${error.message}`);
       console.log(`  ~ reset    ${m.email}`);
