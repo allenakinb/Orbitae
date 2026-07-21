@@ -118,6 +118,12 @@ export function OrbitSystem({
   }, []);
 
   const groups = useMemo(() => layout(members), [members]);
+  // Epoca del layout: quando cambia la composizione (non a ogni refresh dei
+  // dati — il seme dipende solo dagli id), le chiavi cambiano e anelli e
+  // avatar rimontano INSIEME. Se ripartisse solo l'avatar, la sua
+  // contro-rotazione perderebbe la fase con l'anello già in moto e
+  // resterebbe storto di quell'angolo.
+  const epoch = useMemo(() => seedFrom(members), [members]);
   const activeMember = useMemo(
     () => members.find((m) => m.id === active) ?? null,
     [members, active],
@@ -235,7 +241,7 @@ export function OrbitSystem({
       {/* Rotating rings of members */}
       {groups.map((g, gi) => (
         <div
-          key={`ring-${gi}`}
+          key={`ring-${gi}-${epoch}`}
           // pointer-events-none: the stacked full-size ring containers would
           // otherwise swallow clicks meant for avatars on the rings below.
           // The avatar buttons re-enable their own pointer events.
