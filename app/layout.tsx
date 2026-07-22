@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   title: "Orbitae — Portale Membri",
   description:
     "Il portale privato del club Orbitae. Accesso riservato ai membri del network.",
-  icons: { icon: "/brand/mark.png" },
+  icons: { icon: "/favicon.ico" },
 };
 
 export const viewport = {
