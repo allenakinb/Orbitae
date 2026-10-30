@@ -10,21 +10,20 @@ import { Logo } from "@/components/brand/Logo";
 import { OrbitMark } from "@/components/brand/OrbitMark";
 
 export function PortalShell({ children }: { children: React.ReactNode }) {
-  const { user, ready } = useAuth();
+  const { user, ready, sessionError, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [drawer, setDrawer] = useState(false);
+  const [drawerPath, setDrawerPath] = useState<string | null>(null);
+  const drawer = drawerPath === pathname;
+  const setDrawer = (open: boolean) => setDrawerPath(open ? pathname : null);
   // Desktop-only: the sidebar can be collapsed to give the content the
   // full width; a floating button at top-left brings it back.
   const [collapsed, setCollapsed] = useState(false);
 
   // Route guard — bounce to login once the session is known to be empty.
   useEffect(() => {
-    if (ready && !user) router.replace("/login");
-  }, [ready, user, router]);
-
-  // Close the mobile drawer on navigation.
-  useEffect(() => setDrawer(false), [pathname]);
+    if (ready && !user && !sessionError) router.replace("/login");
+  }, [ready, user, router, sessionError]);
 
   // Lock body scroll while the drawer is open.
   useEffect(() => {
@@ -34,6 +33,14 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
     };
   }, [drawer]);
 
+  if (sessionError) {
+    return <main className="grid min-h-dvh place-items-center px-6"><div className="max-w-md space-y-5 text-center">
+      <h1 className="font-display text-2xl">Account non disponibile</h1>
+      <p role="alert" className="text-ink-muted">{sessionError}</p>
+      <button className="rounded-[var(--radius)] border border-border px-5 py-3" onClick={() => window.location.reload()}>Riprova</button>
+      <button className="ml-4 underline" onClick={logout}>Torna all’accesso</button>
+    </div></main>;
+  }
   if (!ready || !user) {
     return (
       <div className="grid min-h-dvh place-items-center">

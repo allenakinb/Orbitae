@@ -21,4 +21,13 @@ if (!/^https?:\/\//.test(url)) {
   );
 }
 
-export const supabase = createClient(url, anonKey);
+export const supabase = createClient(url, anonKey, {
+  global: {
+    fetch: (input, init) => fetch(input, {
+      ...init,
+      signal: init?.signal
+        ? AbortSignal.any([init.signal, AbortSignal.timeout(15000)])
+        : AbortSignal.timeout(15000),
+    }),
+  },
+});

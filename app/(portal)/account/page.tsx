@@ -1,9 +1,10 @@
 "use client";
 
+import { supabase } from "@/lib/supabase/client";
 import { useState } from "react";
-import { Camera, Check, KeyRound, Mail, Trash2 } from "lucide-react";
+import { Camera, Check, Mail, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { repo } from "@/lib/data/store";
+import { repo, loadAll } from "@/lib/data/store";
 import type { Profile } from "@/lib/data/types";
 import { resizeToDataUrl, ACCEPTED_IMAGE } from "@/lib/brand/image";
 import { PageContainer } from "@/components/shell/PageContainer";
@@ -40,7 +41,7 @@ export default function AccountPage() {
       </div>
 
       <PersonalDataForm key={user.id} user={user} />
-      <PasswordForm />
+      <EmailAccessForm />
     </PageContainer>
   );
 }
@@ -191,94 +192,58 @@ function PersonalDataForm({ user }: { user: Profile }) {
   );
 }
 
-function PasswordForm() {
-  const { changePassword } = useAuth();
-  const [pw, setPw] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [error, setError] = useState<string | null>(null);
+function EmailAccessForm() {
+  const { user } = useAuth();
+  const [email, setEmail] = useState("");
+  const [token, setToken] = useState("");
+  const [sent, setSent] = useState(false);
+  const [useCode, setUseCode] = useState(false);
   const [done, setDone] = useState(false);
+  const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
-
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-    setDone(false);
-    if (pw.length < 8) {
-      setError("La password deve avere almeno 8 caratteri.");
-      return;
-    }
-    if (pw !== confirm) {
-      setError("Le due password non coincidono.");
-      return;
-    }
-    setPending(true);
-    const res = await changePassword(pw);
-    setPending(false);
-    if (!res.ok) {
-      setError(res.error ?? "Aggiornamento non riuscito.");
-      return;
-    }
-    setPw("");
-    setConfirm("");
-    setDone(true);
+    if (pending || !user) return;
+    setPending(true); setMessage("");
+    try {
+      const nextEmail = email.trim().toLowerCase();
+      if (!sent) {
+        if (nextEmail.endsWith("@orbitae.club")) { setMessage("Inserisci una casella personale o di lavoro che puoi aprire."); return; }
+        const { data: current, error: currentError } = await supabase.auth.getUser();
+        if (currentError || !current.user) { setMessage("Sessione scaduta. Accedi nuovamente."); return; }
+        if (current.user.email?.toLowerCase() === nextEmail) { setMessage("Questa è già la tua email di accesso."); return; }
+        const { error } = await supabase.auth.updateUser({ email: nextEmail }, { emailRedirectTo: `${window.location.origin}/account` });
+        if (error) { setMessage("Invio non riuscito: verifica l’indirizzo o attendi qualche minuto prima di riprovare."); return; }
+        setEmail(nextEmail); setSent(true);
+        setMessage("Apri il link ricevuto sulla nuova email, poi verifica qui la conferma. La vecchia email resta valida fino alla conferma.");
+      } else {
+        let verifiedId: string | undefined;
+        if (useCode) {
+          const { data, error } = await supabase.auth.verifyOtp({ email: nextEmail, token: token.trim(), type: "email_change" });
+          if (error) { setMessage("Codice non valido o scaduto. Riprova o richiedine uno nuovo."); return; }
+          verifiedId = data.user?.id;
+        }
+        // Dual confirmation can return success without completing the change.
+        const { data: verified, error: verifiedError } = await supabase.auth.getUser();
+        if (verifiedError || !verified.user || verified.user.id !== user.id || verified.user.email?.toLowerCase() !== nextEmail || (verifiedId && verifiedId !== user.id)) {
+          setMessage("Il cambio non è ancora completato. Apri il link sulla nuova email. Se non riesci a confermare, contatta la segreteria."); return;
+        }
+        const { error: profileError } = await supabase.from("profiles").update({ email: nextEmail }).eq("id", user.id).select("id").single();
+        setDone(true); setSent(false); setToken("");
+        await loadAll();
+        setMessage(profileError ? "Email di accesso confermata. L’email visibile nel profilo non è stata sincronizzata: contatta la segreteria." : "Email confermata. Dal prossimo accesso richiedi un link su questa email. Profilo e presenze sono conservati.");
+      }
+    } catch { setMessage("Connessione non disponibile. Riprova."); }
+    finally { setPending(false); }
   }
-
-  return (
-    <form
-      onSubmit={submit}
-      className="mt-6 rounded-[var(--radius-lg)] border border-border bg-surface p-6"
-    >
-      <h2 className="inline-flex items-center gap-2 font-display text-lg text-ink">
-        <KeyRound size={17} className="text-ink-faint" /> Cambia password
-      </h2>
-      <p className="mt-1 text-sm text-ink-muted">
-        Dalla prossima volta accederai con la nuova password.
-      </p>
-
-      <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        <Field label="Nuova password" htmlFor="pw-new">
-          <Input
-            id="pw-new"
-            type="password"
-            autoComplete="new-password"
-            value={pw}
-            onChange={(e) => setPw(e.target.value)}
-            placeholder="Minimo 8 caratteri"
-            required
-          />
-        </Field>
-        <Field label="Conferma password" htmlFor="pw-confirm">
-          <Input
-            id="pw-confirm"
-            type="password"
-            autoComplete="new-password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            placeholder="Ripeti la nuova password"
-            required
-          />
-        </Field>
-      </div>
-
-      {error && (
-        <p
-          role="alert"
-          className="mt-4 rounded-[var(--radius)] border border-accent/40 bg-accent-soft px-3 py-2 text-sm text-accent-hover"
-        >
-          {error}
-        </p>
-      )}
-
-      <div className="mt-5 flex items-center justify-end gap-3">
-        {done && (
-          <span className="inline-flex items-center gap-1.5 text-sm text-[var(--color-active)]">
-            <Check size={15} /> Password aggiornata
-          </span>
-        )}
-        <Button type="submit" disabled={pending || !pw || !confirm}>
-          {pending ? "Aggiorno…" : "Aggiorna password"}
-        </Button>
-      </div>
-    </form>
-  );
+  return <form onSubmit={submit} className="mt-6 rounded-[var(--radius-lg)] border border-border bg-surface p-6">
+    <h2 className="font-display text-lg text-ink">Email di accesso</h2>
+    <p className="mt-2 text-sm text-ink-muted">Associa una casella personale per ricevere i link di accesso. Il tuo account resta lo stesso.</p>
+    <div className="mt-5"><Field label="Email personale o di lavoro" htmlFor="new-email"><Input id="new-email" type="email" autoComplete="email" required disabled={pending || sent || done} value={email} onChange={e => setEmail(e.target.value)} /></Field></div>
+    {sent && useCode && <div className="mt-4"><Field label="Codice ricevuto sulla nuova email" htmlFor="email-code"><Input id="email-code" autoComplete="one-time-code" inputMode="numeric" required disabled={pending} value={token} onChange={e => setToken(e.target.value)} /></Field></div>}
+    {message && <p role="status" className="mt-4 text-sm">{message}</p>}
+    {!done && <Button className="mt-5" type="submit" disabled={pending}>{pending ? "Attendi…" : sent ? "Verifica conferma email" : "Invia link alla nuova email"}</Button>}
+    {sent && !useCode && <button className="mt-4 block text-sm underline underline-offset-4" type="button" disabled={pending} onClick={() => setUseCode(true)}>Ho ricevuto un codice da inserire</button>}
+    {sent && <button className="mt-4 block text-sm underline underline-offset-4" type="button" disabled={pending} onClick={() => { setSent(false); setUseCode(false); setToken(""); setMessage(""); }}>Cambia indirizzo o richiedi un nuovo link</button>}
+  </form>;
 }

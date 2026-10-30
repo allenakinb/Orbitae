@@ -1,84 +1,51 @@
 # Orbitae — Portale Membri
 
-Private member portal for **Orbitae**, an invite-only business conversation
-club. Dark, premium, brand-driven UI built around the logo's signature
-**orbit**: on the Home, every member revolves around the central Orbitae mark.
+Portale privato del club Orbitae: Next.js App Router, React, TypeScript,
+Tailwind CSS e Supabase Auth/Postgres. Interfaccia in italiano, brand scuro
+con Archivo e accento Orbit Red.
 
-Built with **Next.js (App Router) · React · TypeScript · Tailwind CSS v4 ·
-motion**. UI language: **Italian**.
-
-## Getting started
-
-```bash
-npm install
-npm run dev      # http://localhost:3000
+```sh
+npm ci
+npm run dev
+npm test
+npm run lint
+npm run build
 ```
 
-The app opens on `/login`. It ships in **demo mode** — no backend required.
+L’applicazione richiede un progetto Supabase configurato. Le variabili pubbliche
+sono `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY`; le API inviti
+richiedono anche `SUPABASE_SERVICE_ROLE_KEY` **solo sul server**. Non esiste una
+registrazione pubblica né un accesso demo locale.
 
-### Demo accounts
+Il login principale usa un magic link inviato all’email personale o di lavoro già presente nel profilo Orbitae, con codice opzionale.
+Gli indirizzi tecnici `@orbitae.club` non sono destinatari dei magic link.
+L’email del profilo deve corrispondere all’email dell’account Supabase Auth.
+È disponibile anche l’accesso con email e password per gli account che la possiedono.
+Il cambio email dalla pagina Account è facoltativo e conserva ID, ruolo e presenze. La configurazione
+Auth usa il template standard per il link; i template OTP in `supabase/templates/` sono facoltativi e richiedono un mittente SMTP configurato.
 
-Sign in with any seeded member's email and the password **`orbitae`**, or use
-the role chips on the login screen:
+La Home mostra i partecipanti in orbita attorno all’episodio selezionato.
+Membri, Bacheca e Documenti compongono il portale; gli amministratori gestiscono
+contenuti e membri. La Virtual Room è stata rimossa dal menu e dalle pagine
+del portale.
 
-| Role   | Email                          |
-| ------ | ------------------------------ |
-| Admin  | `marco.fontana@orbitae.club`   |
-| Staff  | `elena.greco@orbitae.club`     |
-| Membro | `luca.bianchi@orbitae.club`    |
+Il livello dati condiviso è `lib/data/adapter.ts` con implementazione Supabase
+in `lib/data/store.ts`. I permessi effettivi sono applicati dalle politiche RLS,
+dai trigger SQL e dai controlli delle route server, oltre alla UI.
 
-Each role sees only what it should (sidebar, composer, upload, admin panel are
-gated by `lib/auth/permissions.ts`).
+Per un database nuovo applicare `supabase/schema.sql`, `supabase/policies.sql`
+e `supabase/migration-inviti.sql`; lo storage richiede il setup dedicato.
+Per il progetto esistente applicare solo la nuova migrazione necessaria: le
+vecchie migrazioni possono contenere sostituzioni distruttive degli eventi.
 
-## Features
+L’importazione membri mostra prima un’anteprima e non genera password:
 
-- **Login** — invite-only (no public signup), branded, minimal.
-- **Home** — the orbit: pick an evening from the selector and the people who
-  attended it rotate around its subject (hover to enlarge + reveal name, click
-  to open the profile), quick stats, then the evening's card and recap. Static,
-  distributed orbit under `prefers-reduced-motion`.
-- **Membri** — the whole network in alphabetical order, searchable by name;
-  open to everyone. Only admin edits others.
-- **Bacheca** — the evenings, each with its recap; only admin creates or edits
-  them. The announcements section appears only when there is something in it.
-- **Documenti** — library by category (Verbali · Regolamenti · Materiali);
-  admin uploads, everyone downloads.
-- **Admin** — member table with inline label/status, summary. Admin access
-  itself is not editable here (see `supabase/migration-tier-presenze.sql`).
-- **Avatar uploads** — members/admin upload a photo (else brand-colored
-  initials), reflected live in the orbit and directory.
-- **Forum** — present in the nav as "Presto" (planned).
-
-## Architecture
-
-The UI never talks to a backend directly. All data flows through a single
-`Repo` interface:
-
-```
-lib/data/adapter.ts   # Repo interface — the one seam to a backend
-lib/data/store.ts     # demoRepo: reactive in-memory + localStorage (current)
-lib/data/hooks.ts     # useSyncExternalStore hooks consumed by pages
-lib/data/seed.ts      # demo dataset (~24 members, posts, docs, events)
+```sh
+npm run users:provision -- --input /percorso/membri.json --event UUID_EPISODIO
+npm run users:provision -- --input /percorso/membri.json --event UUID_EPISODIO --apply
 ```
 
-## Going live with Supabase
-
-The SQL is already written under `supabase/`:
-
-1. Create a Supabase project; run `supabase/schema.sql`, then
-   `supabase/policies.sql` (RLS encodes the same permission matrix), then
-   optionally `supabase/seed.sql`.
-2. `npm install @supabase/supabase-js`; add `NEXT_PUBLIC_SUPABASE_URL` and
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY` to `.env.local`.
-3. Implement the `Repo` interface (`lib/data/adapter.ts`) against supabase-js
-   and swap the demo export. Auth: replace the demo session in
-   `lib/auth/AuthProvider.tsx` with Supabase Auth (invite-only); avatar
-   uploads move from data-URLs to Supabase Storage.
-
-No page or component changes are required — they depend only on `Repo`.
-
-## Brand
-
-Tokens (OKLCH) live in `app/globals.css`; the logo's radial dot-burst is
-recreated in `components/brand/OrbitMark.tsx`. Source logo assets are in
-`public/brand/`.
+Stato reale, requisiti di attivazione e prove di consegna sono in
+[docs/ATTIVAZIONE-ACCESSI-INVITI.md](docs/ATTIVAZIONE-ACCESSI-INVITI.md).
+La suite di test comprende l’esecuzione della migrazione e delle politiche
+RLS su Postgres PGlite, senza messaggi o modifiche al database remoto.

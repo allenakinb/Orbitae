@@ -35,6 +35,9 @@ yarn-error.log*
 
 # vercel
 .vercel
+supabase/.temp/
+.local/
+.impeccable/review/
 
 # typescript
 *.tsbuildinfo
