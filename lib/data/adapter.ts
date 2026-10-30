@@ -15,7 +15,7 @@ import type {
 // Implemented by the Supabase-backed store (./store.ts): synchronous
 // reads against a reactive cache, write-through mutations. Auth lives
 // in /lib/auth/AuthProvider (Supabase Auth); creating new members
-// requires the admin API — see /scripts/create-users.mjs.
+// uses /api/members for admins or /scripts/create-users.mjs for imports.
 // ===================================================================
 
 export interface AnnouncementInput {
@@ -64,7 +64,6 @@ export interface Repo {
   updateEvent(id: string, patch: Partial<EventInput>): ClubEvent | undefined;
   deleteEvent(id: string): void;
 
-  // Le presenze si popolano da /scripts/create-users.mjs a partire dagli
-  // elenchi contatti: qui sono di sola lettura.
+  // Attendance writes use saveEventWithAttendance for atomic event saves.
   listAttendeeIds(eventId: string): string[];
 }

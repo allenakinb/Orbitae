@@ -422,3 +422,12 @@ export const repo: Repo = {
     persistOrResync(supabase.from("events").delete().eq("id", id));
   },
 };
+
+// Await the transaction before closing the editor or updating the orbit.
+export async function saveEventWithAttendance(id: string, input: EventInput, attendeeIds: string[]) {
+  const { error } = await supabase.rpc("save_event_attendance", {
+    event_id: id, details: toEventRow(input), attendee_ids: attendeeIds,
+  });
+  if (error) throw new Error("Salvataggio non riuscito. Verifica la connessione e l’attivazione della gestione presenze, poi riprova.");
+  if (!await loadAll()) throw new Error("Incontro salvato. Riprova per aggiornare l’elenco o ricarica la pagina.");
+}

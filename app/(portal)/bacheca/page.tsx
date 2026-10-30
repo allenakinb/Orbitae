@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import { useAnnouncements, useEvents, useProfiles } from "@/lib/data/hooks";
-import { repo } from "@/lib/data/store";
+import { repo, saveEventWithAttendance } from "@/lib/data/store";
 import type { EventInput } from "@/lib/data/adapter";
 import type { ClubEvent } from "@/lib/data/types";
 import { useAuth } from "@/lib/auth/AuthProvider";
@@ -30,12 +30,8 @@ export default function BachecaPage() {
     [profiles],
   );
 
-  function submitEvent(input: EventInput) {
-    if (eventDraft && eventDraft !== "new") {
-      repo.updateEvent(eventDraft.id, input);
-    } else {
-      repo.createEvent(input);
-    }
+  async function submitEvent(input: EventInput, attendeeIds: string[], id: string) {
+    await saveEventWithAttendance(id, input, attendeeIds);
     setEventDraft(null);
   }
 

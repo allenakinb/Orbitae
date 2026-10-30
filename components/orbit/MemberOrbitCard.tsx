@@ -34,19 +34,14 @@ function Row({
   );
 }
 
-// Larger member preview shown when an avatar in the orbit is hovered,
-// focused or clicked. Persistent (close with the ✕ or Esc) so its email
+// Member preview opened by clicking an avatar. Persistent (close with the ✕ or Esc) so its email
 // and LinkedIn links stay reachable — a hover tooltip would vanish.
 export function MemberOrbitCard({
   member,
   onClose,
-  onMouseEnter,
-  onMouseLeave,
 }: {
   member: Profile;
   onClose: () => void;
-  onMouseEnter?: () => void;
-  onMouseLeave?: () => void;
 }) {
   // Esc closes the card.
   useEffect(() => {
@@ -61,8 +56,6 @@ export function MemberOrbitCard({
     <div
       role="dialog"
       aria-label={`Scheda di ${member.name}`}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
       className="pointer-events-auto fixed inset-x-4 bottom-4 z-[var(--z-drawer)] w-auto rounded-[var(--radius-lg)] border border-border bg-elevated p-5 shadow-2xl motion-safe:animate-fade-rise sm:inset-y-0 sm:left-auto sm:right-6 sm:my-auto sm:h-fit sm:w-[340px]"
     >
       <button

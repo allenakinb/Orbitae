@@ -19,6 +19,6 @@ export async function requireAdmin(request: Request) {
   if (error || !data.user) return null;
   const { data: profile, error: profileError } = await client.from("profiles")
     .select("role,status").eq("id", data.user.id).single();
-  if (profileError || profile?.role !== "admin" || ["suspended", "expired"].includes(profile.status)) return null;
+  if (profileError || profile?.role !== "admin" || profile.status !== "active") return null;
   return client;
 }

@@ -18,10 +18,11 @@ test("actual invitation migration and access policies", async t => {
       grant usage on schema auth to authenticated; grant execute on function auth.uid() to authenticated;`);
     await db.exec(readFileSync(new URL("../supabase/schema.sql", import.meta.url), "utf8"));
     await db.exec(readFileSync(new URL("../supabase/policies.sql", import.meta.url), "utf8"));
-    await db.exec("grant select, insert, update on all tables in schema public to authenticated");
+    await db.exec("grant select, insert, update, delete on all tables in schema public to authenticated");
     const migration = readFileSync(new URL("../supabase/migration-inviti.sql", import.meta.url), "utf8");
     await db.exec(migration);
     await db.exec(migration);
+    await db.exec(readFileSync(new URL("../supabase/migration-presenze.sql", import.meta.url), "utf8"));
     for (const [id, name, role] of [[admin, "QA Admin", "admin"], [alice, "QA Alice", "member"], [bob, "QA Bob", "member"]]) {
       await db.query("insert into auth.users values ($1,$2)", [id, `${name.replaceAll(" ", "")}@example.com`]);
       await db.query("insert into profiles(id,name,email,role,status) values ($1,$2,$3,$4,'active')", [id, name, `${name.replaceAll(" ", "")}@example.com`, role]);
@@ -80,6 +81,18 @@ test("actual invitation migration and access policies", async t => {
       await assert.rejects(db.query("insert into event_invitations(event_id) values ($1)",[event]), /invitation_recipient/);
       await assert.rejects(db.query("insert into event_invitations(event_id,guest_name,email) values ($1,'QA Guest','guest@example.com')",[event]), /invitation_recipient/);
       await assert.rejects(db.query("insert into event_invitations(event_id,profile_id) values ($1,$2)",[event,alice]), /unique constraint/);
+    });
+    await t.test("event and attendance save together and reject unauthorized changes", async () => {
+      const details = {title:"QA Updated",date:"2026-12-10",speakers:[],moderators:[]};
+      await asUser(bob, () => assert.rejects(db.query("select save_event_attendance($1,$2,$3)",[event,details,[bob]]), /Administrator required/));
+      await asUser(admin, () => assert.rejects(db.query("select save_event_attendance($1,$2,$3)",[event,details,[bob]]), /Administrator required/));
+      await db.query("update profiles set status='active' where id=$1",[admin]);
+      await asUser(admin, () => db.query("select save_event_attendance($1,$2,$3)",[event,details,[alice,bob,bob]]));
+      assert.equal((await db.query("select * from event_attendees where event_id=$1",[event])).rows.length,2);
+      await asUser(admin, () => assert.rejects(db.query("select save_event_attendance($1,$2,$3)",[event,{...details,title:"Must not persist"},["a0000000-0000-4000-8000-000000000099"]]), /Unknown participant/));
+      assert.equal((await db.query("select title from events where id=$1",[event])).rows[0].title,"QA Updated");
+      await asUser(admin, () => db.query("select save_event_attendance($1,$2,$3)",[event,details,[]]));
+      assert.equal((await db.query("select * from event_attendees where event_id=$1",[event])).rows.length,0);
     });
   } finally { await db.close(); }
 });

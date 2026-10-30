@@ -1,15 +1,23 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { useProfiles } from "@/lib/data/hooks";
 import { PageContainer } from "@/components/shell/PageContainer";
 import { SectionTitle } from "@/components/ui/Card";
 import { MemberRow } from "@/components/content/MemberCard";
 import { Input } from "@/components/ui/Field";
 
+import { useAuth } from "@/lib/auth/AuthProvider";
+import { can } from "@/lib/auth/permissions";
+import { Button } from "@/components/ui/Button";
+import { NewMemberForm } from "@/components/content/NewMemberForm";
+
 export default function MembriPage() {
   const profiles = useProfiles();
+  const { user } = useAuth();
+  const [creating, setCreating] = useState(false);
+  const [notice, setNotice] = useState("");
   const [query, setQuery] = useState("");
 
   const results = useMemo(() => {
@@ -35,6 +43,9 @@ export default function MembriPage() {
         subtitle="La directory completa del network, in ordine alfabetico."
       />
 
+      {can(user?.role, "manageMembers") && !creating && <Button className="mt-5" onClick={() => { setCreating(true); setNotice(""); }}><Plus size={16} /> Nuovo membro</Button>}
+      {can(user?.role, "manageMembers") && creating && <NewMemberForm onCreated={() => { setCreating(false); setNotice("Membro creato. Ora puoi aggiungerlo ai presenti di un incontro in Bacheca."); }} onCancel={() => setCreating(false)} />}
+      {notice && <p role="status" className="mt-4 text-sm text-ink-muted">{notice}</p>}
       <div className="relative mt-6">
         <Search
           size={17}

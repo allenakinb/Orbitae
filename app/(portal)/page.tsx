@@ -72,7 +72,7 @@ export default function HomePage() {
           </h1>
           <p className="mx-auto mt-2 max-w-md text-sm text-ink-muted">
             {selected
-              ? `${attendees.length} persone in orbita attorno a «${selected.title}». Passa sopra un avatar per scoprirle.`
+              ? `${attendees.length} persone in orbita attorno a «${selected.title}». Clicca su un avatar per scoprirle.`
               : "Nessun evento da mostrare."}
           </p>
         </header>

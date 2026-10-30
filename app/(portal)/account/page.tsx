@@ -32,16 +32,29 @@ export default function AccountPage() {
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <TierBadge tier={user.tier} />
           </div>
-          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink-muted">
+          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink-muted">
             <span className="inline-flex items-center gap-1.5">
-              <Mail size={14} className="text-ink-faint" /> {user.email}
+              <Mail size={14} className="shrink-0 text-ink-faint" /> <span className="break-all">{user.email}</span>
             </span>
+            <a
+              href="#email-access"
+              className="rounded text-accent underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+              onClick={(event) => {
+                const input = document.getElementById("new-email");
+                if (input && !input.hasAttribute("disabled")) {
+                  event.preventDefault();
+                  input.focus();
+                }
+              }}
+            >
+              Modifica email
+            </a>
           </div>
         </div>
       </div>
 
+      <EmailAccessForm key={user.id} />
       <PersonalDataForm key={user.id} user={user} />
-      <EmailAccessForm />
     </PageContainer>
   );
 }
@@ -236,13 +249,14 @@ function EmailAccessForm() {
     } catch { setMessage("Connessione non disponibile. Riprova."); }
     finally { setPending(false); }
   }
-  return <form onSubmit={submit} className="mt-6 rounded-[var(--radius-lg)] border border-border bg-surface p-6">
+  return <form id="email-access" onSubmit={submit} className="mt-6 scroll-mt-6 rounded-[var(--radius-lg)] border border-border bg-surface p-6">
     <h2 className="font-display text-lg text-ink">Email di accesso</h2>
-    <p className="mt-2 text-sm text-ink-muted">Associa una casella personale per ricevere i link di accesso. Il tuo account resta lo stesso.</p>
+    <p className="mt-2 text-sm text-ink-muted">Modifica l’email mostrata sotto il tuo nome e usata per accedere. La nuova email sarà attiva solo dopo la conferma del link che riceverai. Profilo e presenze restano gli stessi.</p>
     <div className="mt-5"><Field label="Email personale o di lavoro" htmlFor="new-email"><Input id="new-email" type="email" autoComplete="email" required disabled={pending || sent || done} value={email} onChange={e => setEmail(e.target.value)} /></Field></div>
     {sent && useCode && <div className="mt-4"><Field label="Codice ricevuto sulla nuova email" htmlFor="email-code"><Input id="email-code" autoComplete="one-time-code" inputMode="numeric" required disabled={pending} value={token} onChange={e => setToken(e.target.value)} /></Field></div>}
     {message && <p role="status" className="mt-4 text-sm">{message}</p>}
     {!done && <Button className="mt-5" type="submit" disabled={pending}>{pending ? "Attendi…" : sent ? "Verifica conferma email" : "Invia link alla nuova email"}</Button>}
+    {done && <button className="mt-4 block text-sm underline underline-offset-4" type="button" onClick={() => { setDone(false); setEmail(""); setUseCode(false); setMessage(""); }}>Modifica di nuovo l’email</button>}
     {sent && !useCode && <button className="mt-4 block text-sm underline underline-offset-4" type="button" disabled={pending} onClick={() => setUseCode(true)}>Ho ricevuto un codice da inserire</button>}
     {sent && <button className="mt-4 block text-sm underline underline-offset-4" type="button" disabled={pending} onClick={() => { setSent(false); setUseCode(false); setToken(""); setMessage(""); }}>Cambia indirizzo o richiedi un nuovo link</button>}
   </form>;

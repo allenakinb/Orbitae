@@ -95,11 +95,6 @@ export function OrbitSystem({
 }) {
   const [hovered, setHovered] = useState<string | null>(null);
   const [active, setActive] = useState<string | null>(null);
-  // Deferred close: leaving the orbit schedules the card to close, but
-  // moving straight onto the card cancels it — so its email/LinkedIn stay
-  // clickable while a stray exit still dismisses it.
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   // Ring positions are percentages (already responsive) but avatar sizes are
   // fixed px tuned for a ~620px system. On a phone the system is far narrower,
   // so scale avatars in proportion to the real width — otherwise they overlap
@@ -129,25 +124,9 @@ export function OrbitSystem({
     [members, active],
   );
 
-  // Pause the orbit only while the pointer is on an avatar, so it doesn't
-  // drift away mid-hover. As soon as you leave the orbit it resumes turning.
-  const paused = hovered !== null;
-
-  function cancelClose() {
-    if (closeTimer.current) {
-      clearTimeout(closeTimer.current);
-      closeTimer.current = null;
-    }
-  }
-  function scheduleClose() {
-    cancelClose();
-    closeTimer.current = setTimeout(() => setActive(null), 140);
-  }
-  function open(id: string) {
-    cancelClose();
-    setHovered(id);
-    setActive(id);
-  }
+  // A clicked card stays open until explicitly dismissed.
+  const paused = hovered !== null || activeMember !== null;
+  function open(id: string) { setActive(id); }
 
   return (
     <div
@@ -156,7 +135,6 @@ export function OrbitSystem({
       style={{ maxWidth: "min(88vw, 620px)" }}
       onMouseLeave={() => {
         setHovered(null);
-        scheduleClose();
       }}
     >
       {/* Dotted orbit guides — echo the mark's dot-burst. Each ring drifts
@@ -284,9 +262,11 @@ export function OrbitSystem({
                   }
                 >
                   <button
-                    onMouseEnter={() => open(member.id)}
-                    onFocus={() => open(member.id)}
+                    onMouseEnter={() => setHovered(member.id)}
+                    onFocus={() => setHovered(member.id)}
                     onBlur={() => setHovered(null)}
+                    onMouseLeave={() => setHovered(null)}
+                    aria-expanded={active === member.id}
                     onClick={() => open(member.id)}
                     aria-label={`${member.name} — ${TIER_LABEL[member.tier]}`}
                     aria-haspopup="dialog"
@@ -313,10 +293,7 @@ export function OrbitSystem({
       {activeMember && (
         <MemberOrbitCard
           member={activeMember}
-          onMouseEnter={cancelClose}
-          onMouseLeave={scheduleClose}
           onClose={() => {
-            cancelClose();
             setActive(null);
             setHovered(null);
           }}

@@ -1,5 +1,8 @@
 "use client";
 
+import Link from "next/link";
+import { useProfiles } from "@/lib/data/hooks";
+import { repo, loadAll } from "@/lib/data/store";
 import { useState } from "react";
 import { Plus, Trash2, X } from "lucide-react";
 import type { EventInput } from "@/lib/data/adapter";
@@ -74,10 +77,18 @@ export function EventForm({
   onCancel,
 }: {
   event?: ClubEvent;
-  onSubmit: (input: EventInput) => void;
+  onSubmit: (input: EventInput, attendeeIds: string[], id: string) => Promise<void>;
   onCancel: () => void;
 }) {
   const isEdit = !!event;
+  const profiles = useProfiles();
+  const [id] = useState(() => event?.id ?? crypto.randomUUID());
+  const [attendeeIds, setAttendeeIds] = useState<string[]>(() => event ? repo.listAttendeeIds(event.id) : []);
+  const [query, setQuery] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const results = query.trim() ? profiles.filter(p => `${p.name} ${p.company ?? ""}`.toLowerCase().includes(query.trim().toLowerCase())).sort((a,b) => a.name.localeCompare(b.name, "it")) : [];
+
   const [title, setTitle] = useState(event?.title ?? "");
   const [subtitle, setSubtitle] = useState(event?.subtitle ?? "");
   const [date, setDate] = useState(event?.date ?? "");
@@ -101,10 +112,11 @@ export function EventForm({
       .filter((p) => p.name.length > 0);
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!valid) return;
-    onSubmit({
+    if (!valid || pending) return;
+    setPending(true); setError("");
+    try { await onSubmit({
       title: title.trim(),
       subtitle: subtitle.trim() || undefined,
       date,
@@ -115,7 +127,9 @@ export function EventForm({
       speakers: clean(speakers),
       moderators: clean(moderators),
       mapUrl: mapUrl.trim() || undefined,
-    });
+    }, attendeeIds, id);
+    } catch (err) { setError(err instanceof Error ? err.message : "Salvataggio non riuscito."); }
+    finally { setPending(false); }
   }
 
   return (
@@ -130,6 +144,7 @@ export function EventForm({
         <button
           type="button"
           onClick={onCancel}
+          disabled={pending}
           aria-label="Chiudi"
           className="rounded-[var(--radius)] p-1 text-ink-muted hover:bg-surface-2 hover:text-ink"
         >
@@ -137,7 +152,7 @@ export function EventForm({
         </button>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <fieldset disabled={pending} className="flex min-w-0 flex-col gap-4">
         <Field label="Titolo" htmlFor="e-title">
           <Input
             id="e-title"
@@ -225,15 +240,28 @@ export function EventForm({
           onChange={setModerators}
         />
 
+        <section aria-labelledby="attendees-title" className="space-y-3 border-t border-border pt-4">
+          <h3 id="attendees-title" className="text-sm font-medium text-ink">Presenti ({attendeeIds.length})</h3>
+          <p className="text-sm text-ink-muted">Seleziona chi ha partecipato all’incontro. Per una persona nuova, crea prima il profilo in <Link href="/membri" target="_blank" rel="noopener noreferrer" className="text-accent underline">Membri (nuova scheda)</Link>, poi aggiorna l’elenco qui sotto.</p>
+          <button type="button" className="text-sm text-accent underline" disabled={pending} onClick={async () => { setPending(true); setError(""); try { if (!await loadAll()) setError("Aggiornamento elenco non riuscito. Riprova."); } catch { setError("Aggiornamento elenco non riuscito. Riprova."); } finally { setPending(false); } }}>Aggiorna elenco membri</button>
+          <div className="flex flex-wrap gap-2">
+            {attendeeIds.map(pid => <button key={pid} type="button" aria-label={`Rimuovi ${profiles.find(p => p.id === pid)?.name ?? "partecipante"}`} onClick={() => setAttendeeIds(ids => ids.filter(x => x !== pid))} className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm">{profiles.find(p => p.id === pid)?.name ?? "Partecipante"}<X size={14} /></button>)}
+          </div>
+          <Input type="search" aria-label="Cerca presenti per nome o azienda" placeholder="Cerca per nome o azienda…" value={query} onChange={e => setQuery(e.target.value)} />
+          {query.trim() && <div className="max-h-64 overflow-auto rounded-[var(--radius)] border border-border p-2">
+            {results.length ? results.map(p => <label key={p.id} className="flex cursor-pointer items-center gap-3 rounded p-3 hover:bg-surface-2"><input type="checkbox" checked={attendeeIds.includes(p.id)} onChange={e => setAttendeeIds(ids => e.target.checked ? [...new Set([...ids, p.id])] : ids.filter(x => x !== p.id))} /><span className="text-sm">{p.name}{p.company && <span className="block text-xs text-ink-muted">{p.company}</span>}</span></label>) : <p className="p-3 text-sm text-ink-muted">Nessun membro trovato.</p>}
+          </div>}
+        </section>
+        {error && <p role="alert" className="text-sm text-accent">{error}</p>}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onCancel}>
             Annulla
           </Button>
-          <Button type="submit" disabled={!valid}>
-            {isEdit ? "Salva modifiche" : "Crea evento"}
+          <Button type="submit" disabled={!valid || pending}>
+            {pending ? "Salvataggio…" : isEdit ? "Salva modifiche" : "Crea evento"}
           </Button>
         </div>
-      </div>
+      </fieldset>
     </form>
   );
 }
