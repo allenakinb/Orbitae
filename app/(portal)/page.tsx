@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useEventAttendees, useEvents } from "@/lib/data/hooks";
@@ -17,14 +17,16 @@ function greeting() {
   return "Buonasera";
 }
 
+const subscribeHydration = () => () => {};
+
 export default function HomePage() {
   const { user } = useAuth();
   const events = useEvents(); // dal più recente
 
   // Compute the time-based greeting after mount to avoid an SSR/client
   // hydration mismatch; "Bentornato" is a stable, time-neutral default.
-  const [greet, setGreet] = useState("Bentornato");
-  useEffect(() => setGreet(greeting()), []);
+  const hydrated = useSyncExternalStore(subscribeHydration, () => true, () => false);
+  const greet = hydrated ? greeting() : "Bentornato";
 
   // L'orbita racconta un evento per volta: si apre sull'ultimo.
   const [selectedId, setSelectedId] = useState<string | null>(null);

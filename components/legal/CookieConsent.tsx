@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 
@@ -12,18 +12,19 @@ type Choice = "all" | "essential";
 // (Supabase auth session), so there are no trackers to gate — the banner
 // records the user's choice and stays hidden afterwards. The choice is
 // kept in localStorage, not a cookie, so no cookie is set before consent.
-export function CookieConsent() {
-  const [visible, setVisible] = useState(false);
+function hasConsent() {
+  try { return Boolean(localStorage.getItem(STORAGE_KEY)); }
+  catch { return false; }
+}
+function subscribeConsent(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  return () => window.removeEventListener("storage", onChange);
+}
 
-  // Read after mount to avoid an SSR/client hydration mismatch.
-  useEffect(() => {
-    try {
-      if (!localStorage.getItem(STORAGE_KEY)) setVisible(true);
-    } catch {
-      // Storage blocked (private mode / cookies off): show the banner.
-      setVisible(true);
-    }
-  }, []);
+export function CookieConsent() {
+  const consent = useSyncExternalStore(subscribeConsent, hasConsent, () => true);
+  const [dismissed, setDismissed] = useState(false);
+  const visible = !consent && !dismissed;
 
   function decide(choice: Choice) {
     try {
@@ -34,7 +35,7 @@ export function CookieConsent() {
     } catch {
       // ignore write failures
     }
-    setVisible(false);
+    setDismissed(true);
   }
 
   if (!visible) return null;
