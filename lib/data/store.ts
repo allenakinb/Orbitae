@@ -213,7 +213,10 @@ function toEventRow(patch: Partial<ClubEvent>): Record<string, unknown> {
 
 // Fetches everything the portal shows in one round. Called after
 // sign-in (RLS only opens the tables to authenticated users).
+let loadRevision = 0;
+
 export async function loadAll(): Promise<boolean> {
+  const revision = ++loadRevision;
   const [p, a, r, e, at] = await Promise.all([
     supabase.from("profiles").select("*"),
     supabase.from("announcements").select("*"),
@@ -221,16 +224,12 @@ export async function loadAll(): Promise<boolean> {
     supabase.from("events").select("*"),
     supabase.from("event_attendees").select("*"),
   ]);
-  const error = p.error ?? a.error ?? r.error ?? e.error;
+  const error = p.error ?? a.error ?? r.error ?? e.error ?? at.error;
   if (error) {
     console.error("[orbitae] caricamento dati fallito:", error.message);
     return false;
   }
-  // Le presenze non sono vitali: se la migration non è ancora passata il
-  // portale resta in piedi con l'orbita vuota, invece di non aprirsi.
-  if (at.error) {
-    console.error("[orbitae] presenze non caricate:", at.error.message);
-  }
+  if (revision !== loadRevision) return true;
   db = {
     profiles: (p.data as ProfileRow[]).map(toProfile),
     announcements: (a.data as AnnouncementRow[]).map(toAnnouncement),
@@ -243,6 +242,7 @@ export async function loadAll(): Promise<boolean> {
 }
 
 export function clearStore() {
+  loadRevision++;
   db = EMPTY;
   emit();
 }

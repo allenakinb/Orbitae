@@ -1,7 +1,8 @@
 "use client";
 
-import { Fragment, useState, useSyncExternalStore } from "react";
+import { Fragment, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { loadAll } from "@/lib/data/store";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useEventAttendees, useEvents } from "@/lib/data/hooks";
 import { PageContainer } from "@/components/shell/PageContainer";
@@ -21,6 +22,14 @@ const subscribeHydration = () => () => {};
 
 export default function HomePage() {
   const { user } = useAuth();
+  useEffect(() => {
+    const refresh = () => { if (document.visibilityState === "visible") void loadAll(); };
+    refresh();
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    const timer = window.setInterval(refresh, 30000);
+    return () => { window.removeEventListener("focus", refresh); document.removeEventListener("visibilitychange", refresh); window.clearInterval(timer); };
+  }, []);
   const events = useEvents(); // dal più recente
 
   // Compute the time-based greeting after mount to avoid an SSR/client

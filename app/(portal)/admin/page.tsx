@@ -1,13 +1,16 @@
 "use client";
 
-import { Fragment, useMemo } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Trash2 } from "lucide-react";
 import { useProfiles } from "@/lib/data/hooks";
-import { repo } from "@/lib/data/store";
+import { supabase } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/Button";
+import { Field, Input } from "@/components/ui/Field";
+import { repo, loadAll } from "@/lib/data/store";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { can } from "@/lib/auth/permissions";
-import type { MemberStatus, Tier } from "@/lib/data/types";
+import type { MemberStatus, Tier, Profile } from "@/lib/data/types";
 import { PageContainer } from "@/components/shell/PageContainer";
 import { Restricted } from "@/components/content/Restricted";
 import { SectionTitle } from "@/components/ui/Card";
@@ -18,6 +21,25 @@ import { Select } from "@/components/ui/Field";
 export default function AdminPage() {
   const { user } = useAuth();
   const profiles = useProfiles();
+  const [deleting, setDeleting] = useState<Profile | null>(null);
+  const [confirmName, setConfirmName] = useState("");
+  const [pending, setPending] = useState(false);
+  const [message, setMessage] = useState("");
+  useEffect(() => { if (deleting) document.getElementById("delete-member-name")?.focus(); }, [deleting]);
+  async function deleteMember(e: React.FormEvent) {
+    e.preventDefault(); if (!deleting || pending || confirmName !== deleting.name) return;
+    setPending(true); setMessage("");
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) throw Error("Sessione scaduta. Accedi nuovamente.");
+      const res = await fetch(`/api/members/${deleting.id}`, { method: "DELETE", headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session.access_token}` }, body: JSON.stringify({ confirmName }) });
+      const result = await res.json();
+      if (!res.ok) throw Error(result.error);
+      setDeleting(null); setConfirmName("");
+      setMessage(await loadAll() ? "Membro eliminato dal portale, dagli incontri e dagli accessi." : "Membro eliminato. Ricarica la pagina per aggiornare l’elenco.");
+    } catch (err) { setMessage(err instanceof Error ? err.message : "Eliminazione non riuscita."); }
+    finally { setPending(false); }
+  }
   const mayManage = can(user?.role, "manageMembers");
 
   const sorted = useMemo(
@@ -70,6 +92,13 @@ export default function AdminPage() {
         ))}
       </div>
 
+      {message && <p role="status" className="mt-4 text-sm text-ink-muted">{message}</p>}
+      {deleting && <form onSubmit={deleteMember} aria-label="Conferma eliminazione membro" className="mt-6 space-y-4 rounded-[var(--radius-lg)] border border-accent bg-surface p-5">
+        <h2 className="font-display text-lg">Eliminare {deleting.name}?</h2>
+        <p className="text-sm text-ink-muted">L’eliminazione è definitiva: verranno rimossi il profilo, l’accesso, le presenze negli incontri e gli inviti collegati. Gli incontri e gli altri membri restano invariati.</p>
+        <Field label={`Scrivi ${deleting.name} per confermare`} htmlFor="delete-member-name"><Input id="delete-member-name" value={confirmName} onChange={e => setConfirmName(e.target.value)} disabled={pending} autoComplete="off" required /></Field>
+        <div className="flex flex-wrap justify-end gap-2"><Button type="button" variant="ghost" disabled={pending} onClick={() => { setDeleting(null); setConfirmName(""); }}>Annulla</Button><Button type="submit" disabled={pending || confirmName !== deleting.name}>{pending ? "Eliminazione…" : "Elimina definitivamente"}</Button></div>
+      </form>}
       {/* Members table */}
       <div className="mt-6 overflow-x-auto rounded-[var(--radius-lg)] border border-border bg-surface">
         <table className="w-full min-w-[680px] text-left text-sm">
@@ -81,6 +110,7 @@ export default function AdminPage() {
                 Settore
               </th>
               <th className="px-4 py-3 font-semibold">Stato</th>
+              {mayManage && <th className="px-4 py-3 font-semibold">Azioni</th>}
             </tr>
           </thead>
           <tbody>
@@ -156,6 +186,7 @@ export default function AdminPage() {
                     <StatusBadge status={m.status} />
                   )}
                 </td>
+                {mayManage && <td className="px-4 py-3">{m.role !== "admin" && <Button size="sm" variant="ghost" disabled={pending} aria-label={`Elimina ${m.name}`} onClick={() => { setDeleting(m); setConfirmName(""); setMessage(""); }}><Trash2 size={15} /> Elimina</Button>}</td>}
               </tr>
             ))}
           </tbody>
